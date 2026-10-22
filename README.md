@@ -74,6 +74,34 @@ The image runs `trustwatch serve --public` as a non-root user. Public mode is bu
 
 Options: `--allowed-host trustwatch.example.com` answers only that Host name; `--trust-proxy` rate-limits by `X-Forwarded-For`, so use it only behind your own proxy; `PORT` sets the port (default 8080 in the image). `/healthz` is for load balancers. Serve it over HTTPS: browsers only allow copy buttons on secure pages.
 
+## Run it on your own stack
+
+Nothing to clone: [uv](https://docs.astral.sh/uv/) installs and runs it straight from this repository. It only reads
+files and never changes anything.
+
+```sh
+curl -LsSf https://astral.sh/uv/install.sh | sh     # once, if uv is not installed
+uvx --from git+https://github.com/Naveen-Sai-Ganadi/trustwatch trustwatch            # this machine or server
+uvx --from git+https://github.com/Naveen-Sai-Ganadi/trustwatch trustwatch scan --no-host --image my-api:prod
+```
+
+- **A server or VM:** run the first command on it. It scans the OS bundle, Python, Node, Java and known programs.
+- **Containers and Kubernetes:** scan the image a service runs (`--image registry/app:tag`, repeatable). Docker pulls it
+  if needed, and the image is never started. List the images in a cluster with
+  `kubectl get pods -A -o jsonpath='{..image}' | tr ' ' '\n' | sort -u`.
+- **Your own Go or Rust services:** `--binary ./bin/service` finds a root store compiled into the program.
+- **CI:** add the scan after your image build. The exit code is 1 on findings at or above `--fail-on`:
+
+```yaml
+# .github/workflows/trustwatch.yml
+- run: docker build -t app:${{ github.sha }} .
+- uses: astral-sh/setup-uv@v6
+- run: uvx --from git+https://github.com/Naveen-Sai-Ganadi/trustwatch trustwatch scan --no-host --image app:${{ github.sha }} --fail-on critical
+```
+
+Add `--json trustwatch-report.json` to any scan and open the file in the dashboard (`trustwatch serve`, or a hosted copy)
+for the readable view. Opening it there does not upload it.
+
 ## Usage
 
 ```sh
@@ -87,13 +115,7 @@ uv run trustwatch update-feed          # refresh Mozilla reference data into ~/.
 uv run trustwatch events               # show the reference data and incidents in use
 ```
 
-Exit code is 1 when any store is at or above `--fail-on` (default `high`), so it can gate CI:
-
-```yaml
-# .github/workflows/trustwatch.yml (with this repo checked out at tools/trustwatch)
-- run: docker build -t app:${{ github.sha }} .
-- run: uvx --from ./tools/trustwatch trustwatch scan --no-host --image app:${{ github.sha }} --fail-on critical
-```
+Exit code is 1 when any store is at or above `--fail-on` (default `high`).
 
 ## Data
 
