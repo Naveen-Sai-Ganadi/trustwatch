@@ -42,6 +42,36 @@ versions published for the incident.
 - **`--path DIR`:** any CA bundle, certifi copy or keystore inside a project or vendored directory.
 - **`--image REF`:** a container image's filesystem, read via `docker create` + `docker export` without running the image. It covers the OS bundle (with the `ca-certificates` package version), Python, Java (with its block list), Node and Bun binaries, and any program in app directories (`/app`, `/srv`, `/opt`, `/usr/local/bin`, ...).
 
+## How it works
+
+A scan goes through four steps.
+
+1. **Find the stores** (`discover.py`, `embedded.py`, `image.py`, `osverify.py`). TrustWatch looks in the known places
+   listed above. It reads PEM bundles, Java keystores (JKS and PKCS#12, without `keytool`) and programs that have roots
+   compiled in. For a container image it runs `docker create` and streams `docker export`, so the image never starts.
+   It reads only the files it needs, never the whole filesystem.
+2. **Load the reference data** (`feed.py`). This is Mozilla's current roots (the curl bundle), the CCADB lists of
+   removed roots and of roots with a distrust-after date, and one folder per incident. Everything ships in the package,
+   so scans work offline.
+3. **Check each store** (`analyze.py`). For every incident, TrustWatch verifies the incident's published test chains
+   against the store with `cryptography`'s X.509 verifier, as a TLS client would. It does this at the incident date,
+   because the test certificates expire but the trust problem does not. If a chain verifies, the store would accept a
+   forged certificate, which is critical. Stores with their own block list (a JDK's `blocked.certs` and distrust policies,
+   the Windows Disallowed store) have it applied first. The macOS check asks Apple's verifier instead. After that come the
+   fingerprint checks: compromised certificates inside the store, roots Mozilla removed, partial distrust, email-only
+   roots, a stale copy, and expired or private roots.
+4. **Report** (`report.py`). Each finding comes with the fix for that kind of store, and the installed version is
+   compared with the incident's patched releases. The output is text, JSON (`--json`, the same data the dashboard
+   shows) or one HTML file (`--html`). The exit code follows `--fail-on`.
+
+Roots compiled into programs are found in one of two ways. Node, Bun and Electron embed PEM text, which is parsed.
+Rust's webpki-roots and similar blobs hold only raw public keys, so TrustWatch searches the binary for the public key of
+every root it knows. These stores are marked partial, because a root TrustWatch has no certificate for cannot be named.
+
+**Adding an incident:** create a folder in `src/trustwatch/data/events/` with `event.json` (affected roots, compromised
+certificates, patched versions, fixes), `roots.pem` and the test chains in `chains/`. See
+`scripts/import_emudhra.py` for how the eMudhra folder was built from the researchers' published data.
+
 ## Dashboard
 
 ```sh
