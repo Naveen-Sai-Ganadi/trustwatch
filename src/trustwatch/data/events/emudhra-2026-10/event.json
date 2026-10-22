@@ -1,0 +1,466 @@
+{
+ "id": "emudhra-2026-10",
+ "title": "eMudhra intermediate CA key compromise",
+ "date": "2026-10-20",
+ "summary": "The private keys of eight eMudhra intermediate CAs (plus their Sectigo cross-signs) can be recovered from the certificates. Browsers blocked them on 17-20 Oct 2026; clients that use a plain CA bundle without revocation checks keep trusting them until the affected roots are removed.",
+ "sources": [
+  "https://emudhra.we-have-a-problem.com/",
+  "https://bugzilla.mozilla.org/show_bug.cgi?id=2083449",
+  "https://blog.cloudflare.com/emudhra-certificate-compromise/"
+ ],
+ "affected_roots": [
+  {
+   "name": "emSign Root TLS CA - G3",
+   "operator": "eMudhra",
+   "role": "direct_issuer",
+   "subject": "CN=emSign Root TLS CA - G3,O=eMudhra Technologies Limited,C=IN",
+   "sha256": "7DD78D5F4F13459A83DFF9ABBBA62EDBAF6F2D102BF257FD712F4D9F2746ED8D"
+  },
+  {
+   "name": "emSign Root CS CA - G3",
+   "operator": "eMudhra",
+   "role": "direct_issuer",
+   "subject": "CN=emSign Root CS CA - G3,O=eMudhra Technologies Limited,C=IN",
+   "sha256": "F2EDAAFF3D9B701FB4D14C9F285F8C0BAD90FC3BCC1FA07D47F4718EDABA34A5"
+  },
+  {
+   "name": "AAA Certificate Services",
+   "operator": "Sectigo",
+   "role": "direct_issuer",
+   "subject": "CN=AAA Certificate Services,O=Comodo CA Limited,L=Salford,ST=Greater Manchester,C=GB",
+   "sha256": "D7A7A0FB5D7E2731D771E9484EBCDEF71D5F0C3E0A2948782BC83EE0EA699EF4"
+  },
+  {
+   "name": "emSign ECC Root CA - G3",
+   "operator": "eMudhra",
+   "role": "cross_signer",
+   "subject": "CN=emSign ECC Root CA - G3,O=eMudhra Technologies Limited,OU=emSign PKI,C=IN",
+   "sha256": "86A1ECBA089C4A8D3BBE2734C612BA341D813E043CF9E8A862CD5C57A36BBE6B"
+  }
+ ],
+ "compromised_intermediates": [
+  {
+   "name": "EM DV TLS CA - G3B",
+   "issued_by": "emSign Root TLS CA - G3",
+   "subject": "CN=EM DV TLS CA - G3B,O=eMudhra BV,C=NL",
+   "sha256": "42C4ACCD12C4F59597925E1A08A7A90102608543809308D50EC427E118BA1493"
+  },
+  {
+   "name": "EM DV TLS CA - G3B",
+   "issued_by": "AAA Certificate Services",
+   "subject": "CN=EM DV TLS CA - G3B,O=eMudhra BV,C=NL",
+   "sha256": "45A883F349AEDFD5F3A649B5498FFB121712BA8B448F3F2A91DBC5A766FCDDBE"
+  },
+  {
+   "name": "EM OV TLS CA - G3B",
+   "issued_by": "emSign Root TLS CA - G3",
+   "subject": "CN=EM OV TLS CA - G3B,O=eMudhra BV,C=NL",
+   "sha256": "98B896625C0C230ADEEC3EB2CF6AAD5001ECF9156A68644E82374CE5833BC25B"
+  },
+  {
+   "name": "EM OV TLS CA - G3B",
+   "issued_by": "AAA Certificate Services",
+   "subject": "CN=EM OV TLS CA - G3B,O=eMudhra BV,C=NL",
+   "sha256": "5F1DED4DD590AF74631290CF073B122A2AAC6A1FA479778A0BD43579BD832699"
+  },
+  {
+   "name": "EM EV TLS CA - G3B",
+   "issued_by": "emSign Root TLS CA - G3",
+   "subject": "CN=EM EV TLS CA - G3B,O=eMudhra BV,C=NL",
+   "sha256": "E7568FE6E12331F4FD7DE61DA4C7559D0F8EB192A218D4741A3BA75184333838"
+  },
+  {
+   "name": "EM EV TLS CA - G3B",
+   "issued_by": "AAA Certificate Services",
+   "subject": "CN=EM EV TLS CA - G3B,O=eMudhra BV,C=NL",
+   "sha256": "579480AEA166290BD3C643589E795FC0D0E54E86505D180F1DFF99EFD3199512"
+  },
+  {
+   "name": "EM DV TLS CA - G3C",
+   "issued_by": "emSign Root TLS CA - G3",
+   "subject": "CN=EM DV TLS CA - G3C,O=eMudhra Inc,C=US",
+   "sha256": "0164D7CEAE5BB909C272AF151FF44B1177AE9B47D9424B94F1D9558C30934D19"
+  },
+  {
+   "name": "EM DV TLS CA - G3C",
+   "issued_by": "AAA Certificate Services",
+   "subject": "CN=EM DV TLS CA - G3C,O=eMudhra Inc,C=US",
+   "sha256": "62B7F9868263F72F6911FC78CEAF72C1979158B7368BF648683BB2AA39B02E72"
+  },
+  {
+   "name": "EM OV TLS CA - G3C",
+   "issued_by": "emSign Root TLS CA - G3",
+   "subject": "CN=EM OV TLS CA - G3C,O=eMudhra Inc,C=US",
+   "sha256": "CB6E15165AC802E9B3F993F16C25D41F4E81C21EBDE71AE1B012AC00BF9C7C3F"
+  },
+  {
+   "name": "EM OV TLS CA - G3C",
+   "issued_by": "AAA Certificate Services",
+   "subject": "CN=EM OV TLS CA - G3C,O=eMudhra Inc,C=US",
+   "sha256": "7485B51C0ED192878FA1D2F948FB529AE1842CC5086C4B67F7BE5B2039DE9489"
+  },
+  {
+   "name": "EM EV TLS CA - G3C",
+   "issued_by": "emSign Root TLS CA - G3",
+   "subject": "CN=EM EV TLS CA - G3C,O=eMudhra Inc,C=US",
+   "sha256": "432EC25F0D28DE9006D97BF752F17BBB2CD41F669933FCB072D9A1148D0261F3"
+  },
+  {
+   "name": "EM EV TLS CA - G3C",
+   "issued_by": "AAA Certificate Services",
+   "subject": "CN=EM EV TLS CA - G3C,O=eMudhra Inc,C=US",
+   "sha256": "FD9D5C2DBBD4995AB69B8D50C439D9527B00529199C2FD01B2174EB58F07021F"
+  },
+  {
+   "name": "EM OV CS CA - G3B",
+   "issued_by": "emSign Root CS CA - G3",
+   "subject": "CN=EM OV CS CA - G3B,O=eMudhra BV,C=NL",
+   "sha256": "9E39DE2881273ACC225A149C72BA3E0F51424963669AB633EE1DC7DF5DB067B4"
+  },
+  {
+   "name": "EM OV CS CA - G3B",
+   "issued_by": "AAA Certificate Services",
+   "subject": "CN=EM OV CS CA - G3B,O=eMudhra BV,C=NL",
+   "sha256": "A496E23AC0CAB8155FC9B117B97EAE368EFCBB9041AEC8804D5A308D2D01C2D8"
+  },
+  {
+   "name": "EM OV CS CA - G3C",
+   "issued_by": "emSign Root CS CA - G3",
+   "subject": "CN=EM OV CS CA - G3C,O=eMudhra Inc,C=US",
+   "sha256": "4B2460A466F95FD40113BCDCCA2CEB29B3B093921DE45474DA7DF48874C630B1"
+  },
+  {
+   "name": "EM OV CS CA - G3C",
+   "issued_by": "AAA Certificate Services",
+   "subject": "CN=EM OV CS CA - G3C,O=eMudhra Inc,C=US",
+   "sha256": "84112972B8E59D14560AE7E7119654474AAD119990CF3722BFC1E3B91615E1FD"
+  }
+ ],
+ "test_chains": [
+  {
+   "host": "dv-g3b-aaa-emudhra.we-have-a-problem.com",
+   "file": "chains/dv-g3b-aaa-emudhra.we-have-a-problem.com.pem"
+  },
+  {
+   "host": "dv-g3b-emudhra.we-have-a-problem.com",
+   "file": "chains/dv-g3b-emudhra.we-have-a-problem.com.pem"
+  },
+  {
+   "host": "dv-g3c-aaa-emudhra.we-have-a-problem.com",
+   "file": "chains/dv-g3c-aaa-emudhra.we-have-a-problem.com.pem"
+  },
+  {
+   "host": "dv-g3c-emudhra.we-have-a-problem.com",
+   "file": "chains/dv-g3c-emudhra.we-have-a-problem.com.pem"
+  },
+  {
+   "host": "ev-g3b-aaa-emudhra.we-have-a-problem.com",
+   "file": "chains/ev-g3b-aaa-emudhra.we-have-a-problem.com.pem"
+  },
+  {
+   "host": "ev-g3b-emudhra.we-have-a-problem.com",
+   "file": "chains/ev-g3b-emudhra.we-have-a-problem.com.pem"
+  },
+  {
+   "host": "ev-g3c-aaa-emudhra.we-have-a-problem.com",
+   "file": "chains/ev-g3c-aaa-emudhra.we-have-a-problem.com.pem"
+  },
+  {
+   "host": "ev-g3c-emudhra.we-have-a-problem.com",
+   "file": "chains/ev-g3c-emudhra.we-have-a-problem.com.pem"
+  },
+  {
+   "host": "ov-g3b-aaa-emudhra.we-have-a-problem.com",
+   "file": "chains/ov-g3b-aaa-emudhra.we-have-a-problem.com.pem"
+  },
+  {
+   "host": "ov-g3b-emudhra.we-have-a-problem.com",
+   "file": "chains/ov-g3b-emudhra.we-have-a-problem.com.pem"
+  },
+  {
+   "host": "ov-g3c-aaa-emudhra.we-have-a-problem.com",
+   "file": "chains/ov-g3c-aaa-emudhra.we-have-a-problem.com.pem"
+  },
+  {
+   "host": "ov-g3c-emudhra.we-have-a-problem.com",
+   "file": "chains/ov-g3c-emudhra.we-have-a-problem.com.pem"
+  }
+ ],
+ "patched": [
+  {
+   "software": "Ubuntu ca-certificates",
+   "patched": "20260816ubuntu0.22.04.1, 20260816ubuntu0.24.04.1, 20260816ubuntu0.26.04.1, 20260816ubuntu0.26.10.1"
+  },
+  {
+   "software": "Debian ca-certificates",
+   "patched": "20250419~deb12u2, 20250419+deb13u1, 20260816+nmu1"
+  },
+  {
+   "software": "Devuan ca-certificates",
+   "patched": "Same as Debian"
+  },
+  {
+   "software": "Arch Linux ca-certificates-mozilla",
+   "patched": "3.131.1-1"
+  },
+  {
+   "software": "Gentoo ca-certificates",
+   "patched": "20260816.3.125"
+  },
+  {
+   "software": "Fedora ca-certificates",
+   "patched": "2026.2.92_v9.0.319"
+  },
+  {
+   "software": "FreeBSD caroot",
+   "patched": "15.1-RELEASE-p6, 14.5-RELEASE-p3, 14.4-RELEASE-p12"
+  },
+  {
+   "software": "FreeBSD ca_root_nss",
+   "patched": "1.131.1"
+  },
+  {
+   "software": "Freedesktop SDK",
+   "patched": "25.08.19, 26.08.3"
+  },
+  {
+   "software": "Chainguard ca-certificates",
+   "patched": "20260909-r3"
+  },
+  {
+   "software": "Alpine Linux ca-certificates",
+   "patched": "20261020-r0"
+  },
+  {
+   "software": "GNU Guix",
+   "patched": "7608a99"
+  },
+  {
+   "software": "OmniOS web/ca-bundle",
+   "patched": "r151054by, r151056ay, r151058y"
+  },
+  {
+   "software": "Bottlerocket",
+   "patched": "pending"
+  },
+  {
+   "software": "NSS",
+   "patched": "3.131.1"
+  },
+  {
+   "software": "curl CA bundle",
+   "patched": "2026-10-20"
+  },
+  {
+   "software": "Cloudflare CFSSL trust store",
+   "patched": "2026.10.1"
+  },
+  {
+   "software": "Homebrew ca-certificates",
+   "patched": "2026-09-25_1"
+  },
+  {
+   "software": "Go",
+   "patched": "1.27.3, 1.26.10"
+  },
+  {
+   "software": "Java",
+   "patched": "27.0.1.0.2, 25.0.5.0.2, 21.0.13.0.2, 17.0.21.0.2, 11.0.33.0.2, 8u511 ( OpenJDK, Oracle JDK )"
+  },
+  {
+   "software": "Node.js",
+   "patched": "22.23.4, 24.22.1, 26.12.1"
+  },
+  {
+   "software": "Python certifi",
+   "patched": "2026.10.19"
+  },
+  {
+   "software": "pip",
+   "patched": "26.2.2"
+  },
+  {
+   "software": "uv",
+   "patched": "0.13.4"
+  },
+  {
+   "software": "pixi",
+   "patched": "0.82.1"
+  },
+  {
+   "software": "Rust rustls-webpki",
+   "patched": "0.103.16"
+  },
+  {
+   "software": "Rust webpki-roots / webpki-root-certs",
+   "patched": "1.0.10"
+  },
+  {
+   "software": "Rustup",
+   "patched": "1.29.2"
+  },
+  {
+   "software": "Electron",
+   "patched": "44.9.1, 43.8.1, 42.11.16"
+  },
+  {
+   "software": "Bun",
+   "patched": "pending"
+  },
+  {
+   "software": "Claude Code",
+   "patched": "2.1.303"
+  },
+  {
+   "software": "Composer ca-bundle",
+   "patched": "1.4.16, 1.6.0"
+  },
+  {
+   "software": "Elixir castore",
+   "patched": "1.0.22"
+  },
+  {
+   "software": "Erlang certifi",
+   "patched": "pending"
+  },
+  {
+   "software": "mise",
+   "patched": "2026.10.17"
+  },
+  {
+   "software": "Perl Mozilla::CA",
+   "patched": "20261020"
+  },
+  {
+   "software": "Deno",
+   "patched": "2.9.8"
+  }
+ ],
+ "remediation": {
+  "macos-system": [
+   "macOS blocks the intermediates for apps that use the system verifier, but the built-in curl, git, python3, perl, ruby and openssl read /etc/ssl/cert.pem without revocation checks. Remove the affected roots:",
+   "sudo cp -p /etc/ssl/cert.pem /etc/ssl/cert.pem.bak && sudo awk '/^(###|===) /{skip=0} /^=== .*\\/CN=(AAA Certificate Services|emSign ECC Root CA - G3)$/{skip=1} !skip' /etc/ssl/cert.pem.bak | sudo tee /etc/ssl/cert.pem > /dev/null"
+  ],
+  "macos-pip": [
+   "The built-in pip3 (and venvs made from the built-in python3) use their own outdated roots. Point them at the fixed system file:",
+   "F=\"$(/usr/bin/python3 -c 'import sysconfig; print(sysconfig.get_path(\"stdlib\"))')/sitecustomize.py\" && echo 'import os; os.environ.setdefault(\"PIP_CERT\", \"/etc/ssl/cert.pem\")' | sudo tee -a \"$F\" > /dev/null && sudo chmod 644 \"$F\""
+  ],
+  "debian": [
+   "Upgrade ca-certificates (apt-get update && apt-get install --only-upgrade ca-certificates). Until a fixed package is available, experts can distrust the roots:",
+   "sed -i -e 's|^mozilla/emSign_ECC_Root_CA_-_G3.crt|!&|' -e 's|^mozilla/Comodo_AAA_Services_root.crt|!&|' /etc/ca-certificates.conf && update-ca-certificates"
+  ],
+  "alpine": [
+   "Upgrade ca-certificates (apk upgrade ca-certificates). Until then:",
+   "apk add ca-certificates && sed -i -e 's|^mozilla/emSign_ECC_Root_CA_-_G3.crt|!&|' /etc/ca-certificates.conf && update-ca-certificates"
+  ],
+  "fedora": [
+   "Upgrade ca-certificates (dnf upgrade ca-certificates). Until then:",
+   "d=/etc/pki/ca-trust/source/blocklist; [ -d $d ] || d=/etc/pki/ca-trust/source/blacklist; trust extract --overwrite --format=pem-bundle --filter='pkcs11:object=Comodo%20AAA%20Services%20root;type=cert' $d/Comodo_AAA_Services_root.pem && trust extract --overwrite --format=pem-bundle --filter='pkcs11:object=emSign%20ECC%20Root%20CA%20-%20G3;type=cert' $d/emSign_ECC_Root_CA_-_G3.pem && update-ca-trust"
+  ],
+  "arch": [
+   "Upgrade ca-certificates-mozilla. Until then:",
+   "trust extract --format=pem-bundle --filter='pkcs11:object=emSign%20ECC%20Root%20CA%20-%20G3;type=cert' /etc/ca-certificates/trust-source/blocklist/emSign_ECC_Root_CA_-_G3.pem && update-ca-trust"
+  ],
+  "homebrew": [
+   "brew update && brew upgrade ca-certificates"
+  ],
+  "certifi": [
+   "pip install --upgrade certifi  (or bump certifi in your lockfile)"
+  ],
+  "pip": [
+   "Upgrade pip, which vendors its own certifi copy: python -m pip install --upgrade pip"
+  ],
+  "node": [
+   "Upgrade Node.js; its root store is compiled into the binary."
+  ],
+  "java": [
+   "Upgrade the JDK/JRE; cacerts ships with it. A JDK may also block certificates with its own distrust list, so confirm the version."
+  ],
+  "generic": [
+   "Replace this bundle with a current one (for example https://curl.se/ca/cacert.pem), or remove the affected roots listed above."
+  ],
+  "embedded": [
+   "Upgrade this program to a patched release; its root store is compiled into the binary."
+  ],
+  "macos-verifier": [
+   "Apple blocks these certificates through its own revocation data. Install pending macOS updates (softwareupdate -l) and re-run; if a chain is still accepted, apps that do not enforce Certificate Transparency remain exposed."
+  ],
+  "windows": [
+   "Microsoft ships blocks through automatic certificate trust list updates. On machines that do not receive them, the tracker publishes Block-EmudhraCompromisedCA.ps1, which adds the 16 certificates to LocalMachine\\Disallowed:",
+   "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\\Block-EmudhraCompromisedCA.ps1"
+  ]
+ },
+ "patch_match": {
+  "macos-system": [],
+  "macos-pip": [],
+  "debian": [
+   "Debian",
+   "Ubuntu"
+  ],
+  "alpine": [
+   "Alpine"
+  ],
+  "fedora": [
+   "Fedora"
+  ],
+  "arch": [
+   "Arch"
+  ],
+  "homebrew": [
+   "Homebrew"
+  ],
+  "certifi": [
+   "Python certifi"
+  ],
+  "pip": [
+   "pip"
+  ],
+  "node": [
+   "Node.js"
+  ],
+  "java": [
+   "Java"
+  ],
+  "generic": [
+   "curl CA bundle",
+   "NSS"
+  ],
+  "windows": [],
+  "macos-verifier": [],
+  "uv": [
+   "uv"
+  ],
+  "bun": [
+   "Bun"
+  ],
+  "deno": [
+   "Deno"
+  ],
+  "rustup": [
+   "Rustup"
+  ],
+  "pixi": [
+   "pixi"
+  ],
+  "mise": [
+   "mise"
+  ],
+  "claude": [
+   "Claude Code"
+  ],
+  "electron": [
+   "Electron"
+  ],
+  "go": [
+   "Go"
+  ],
+  "rust": [
+   "Rust rustls-webpki",
+   "Rust webpki-roots"
+  ],
+  "embedded": [
+   "Rust webpki-roots",
+   "Go"
+  ]
+ }
+}
