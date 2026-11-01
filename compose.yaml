@@ -1,0 +1,91 @@
+# TrustWatch with Docker Compose. The Makefile wraps the usual commands; see "Docker Compose" in the README.
+#
+#   make up          website at http://localhost:8080 (web + proxy)
+#   make dashboard   local dashboard at http://127.0.0.1:8765 (DASHBOARD_PORT) for your Docker images and SCAN_DIR
+#   make scan ARGS="--image node:22-slim"    one-off scan, reports land in ./reports
+#   make update      refresh Mozilla and incident data for every service
+#   make test        run the test suite in a container
+name: trustwatch
+
+x-scanner: &scanner
+  build: { context: ., target: scanner }
+  image: trustwatch-scanner:local
+  environment:
+    XDG_CACHE_HOME: /cache
+  volumes:
+    - /var/run/docker.sock:/var/run/docker.sock  # to read images through the host's Docker; never starts them
+    - ${SCAN_DIR:-.}:/scan:ro
+    - feed:/cache
+
+services:
+  # The public website: browser test, report viewer and single-file check. It never scans the machine it runs on.
+  web:
+    build: { context: ., target: web }
+    image: trustwatch-web:local
+    environment:
+      XDG_CACHE_HOME: /cache
+      TRUSTWATCH_TRUST_PROXY: "1"  # one proxy in front (below), so rate limits count the real visitor
+    volumes:
+      - feed:/cache:ro
+    expose: ["8080"]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+
+  # Front end. Locally it serves plain http on :8080. With SITE_ADDRESS set to your domain (compose.prod.yaml),
+  # Caddy gets and renews the HTTPS certificate itself.
+  proxy:
+    image: caddy:2.10-alpine
+    depends_on:
+      web: { condition: service_healthy }
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:8080}
+    ports: ["${HTTP_PORT:-8080}:8080"]
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy:/data
+    restart: unless-stopped
+
+  # Local dashboard. Inside a container "this computer" would be the container, so it offers Docker images and
+  # the folder mounted from SCAN_DIR instead. Listens on 127.0.0.1 only. The port is the same inside and outside,
+  # because the dashboard only answers requests addressed to its own host:port.
+  dashboard:
+    <<: *scanner
+    profiles: [dashboard]
+    command: ["serve", "--bind", "0.0.0.0", "--port", "${DASHBOARD_PORT:-8765}", "--no-open", "--no-host", "--scan-dir", "/scan"]
+    ports: ["127.0.0.1:${DASHBOARD_PORT:-8765}:${DASHBOARD_PORT:-8765}"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${SCAN_DIR:-.}:/scan:ro
+      - feed:/cache
+      - scans:/root/.local/share/trustwatch
+    restart: unless-stopped
+
+  # One-off scans: docker compose run --rm scan --image app:1.2 --path /scan
+  scan:
+    <<: *scanner
+    profiles: [cli]
+    entrypoint: ["trustwatch", "scan", "--no-host", "--json", "/reports/trustwatch-report.json", "--html", "/reports/trustwatch-report.html"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${SCAN_DIR:-.}:/scan:ro
+      - feed:/cache
+      - ./reports:/reports
+
+  # Refresh reference and incident data into the shared volume: docker compose run --rm update
+  update:
+    <<: *scanner
+    profiles: [cli]
+    entrypoint: ["trustwatch", "update-feed"]
+
+  test:
+    profiles: [test]
+    build: { context: ., target: test }
+    image: trustwatch-test:local
+
+volumes:
+  feed:
+  caddy:
+  scans:

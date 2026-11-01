@@ -6,3 +6,5 @@ dist/
 /*.html
 .playwright-mcp/
 .claude/
+/reports/
+.DS_Store

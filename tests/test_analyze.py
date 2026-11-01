@@ -165,6 +165,8 @@ def test_binary_without_roots(feed):
 def test_binary_version_extracted(pki, feed):
     blob = b"https://nodejs.org/download/release/v24.6.0/node.tar.gz" + pem(*[make(f"N{i}") for i in range(10)])
     assert scan_bytes("/usr/bin/node", blob, feed).version == "v24.6.0"
+    # Bun embeds the Node.js release it imitates; its own version is the one that matches the patched table.
+    assert scan_bytes("/usr/local/bin/bun", b"Bun v1.4.4 (abc)" + blob, feed).version == "1.4.4"
 
 
 # --- version comparison against the patched table ---
@@ -193,7 +195,10 @@ def real():
 def test_bundled_feed_loads(real):
     assert len(real.reference) > 100 and real.removed and real.partial and real.email_only
     ev = {e.id: e for e in real.events}["emudhra-2026-10"]
-    assert len(ev.test_chains) == 12 and len(ev.compromised) == 16 and len(ev.roots) == 4
+    assert len(ev.test_chains) == 16 and len(ev.compromised) == 16 and len(ev.roots) == 4
+    kinds = list(ev.chain_kinds.values())
+    assert (kinds.count("regular"), kinds.count("noct"), kinds.count("rollover")) == (12, 2, 2)
+    assert len(ev.probe_hosts()) == 12 and not any("noct" in h for h in ev.probe_hosts())
 
 
 def test_current_mozilla_bundle_rejects_emudhra_chains(real):
@@ -211,7 +216,10 @@ def test_bundle_with_affected_roots_trusts_emudhra_chains(real):
     s = TrustStore("os-bundle", "old.pem", list(real.reference.values()) + real_roots("AAA Certificate Services"), platform="debian")
     f = analyze(s, real).findings[0]
     assert f.code == "EVENT_TRUSTED" and f.certs == ["AAA Certificate Services"]
-    assert "6 of 12" in f.detail  # only the AAA cross-signed chains
+    # Only the AAA cross-signed chains: six live sites, one never logged to CT, one through a key rollover
+    # (counted as OpenSSL counts it, see analyze._event_finding).
+    assert "8 of 16" in f.detail and "Certificate Transparency" in f.detail
+    assert sum("rollover" in h for h in f.accepted) == 1
     assert any("ca-certificates" in x for x in f.fix) and any(p["software"].startswith("Debian") for p in f.patched)
 
 

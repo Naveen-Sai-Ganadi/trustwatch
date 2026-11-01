@@ -119,18 +119,22 @@ def describe(s: TrustStore) -> tuple[str, str]:
 
 
 def routes(feed: Feed) -> dict:
-    """Group each incident's test chains by the root they end at, for the chain diagram."""
+    """Group each incident's live, CT-logged test chains by the root they end at, for the browser test and chain diagram.
+    `chains` counts every published chain, including unlogged and rollover ones."""
     out = {}
     for ev in feed.events:
         by_anchor = {}
-        for host, chain in ev.test_chains:
+        chains = dict(ev.test_chains)
+        for host in ev.probe_hosts():
+            chain = chains[host]
             anchor = chain[-1].obj.issuer.rfc4514_string()
             m = re.search(r"CN=([^,]+)", anchor)
             anchor = m.group(1) if m else anchor
             r = by_anchor.setdefault(anchor, {"anchor": anchor, "hosts": [], "path": [c.name for c in chain[1:]]})
             r["hosts"].append(host)
         out[ev.id] = {"id": ev.id, "title": ev.title, "date": ev.date, "summary": ev.summary, "sources": ev.sources,
-                      "compromised": len(ev.compromised), "routes": list(by_anchor.values())}
+                      "compromised": len(ev.compromised), "routes": list(by_anchor.values()),
+                      "chains": len(ev.test_chains), "updated": ev.updated}
     return out
 
 

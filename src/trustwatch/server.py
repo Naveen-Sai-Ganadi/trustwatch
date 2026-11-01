@@ -71,7 +71,7 @@ def browser_test(feed) -> list[dict]:
     """What the page needs to test the visitor's own browser: each incident's live test sites, plus a control site."""
     by_event = routes(feed)
     return [{"event": ev.id, "control": ev.sources[0] if ev.sources else None, "routes": by_event[ev.id]["routes"],
-             "hosts": [host for host, _ in ev.test_chains]} for ev in feed.events]
+             "hosts": ev.probe_hosts()} for ev in feed.events]
 
 
 class Jobs:
@@ -107,8 +107,8 @@ class Jobs:
 
 
 class RateLimit:
-    def __init__(self, limit: int = CHECKS_PER_WINDOW, window: int = WINDOW):
-        self.limit, self.window = limit, window
+    def __init__(self, limit: int | None = None, window: int | None = None):
+        self.limit, self.window = limit or CHECKS_PER_WINDOW, window or WINDOW
         self.hits: dict[str, deque] = defaultdict(deque)
         self.lock = threading.Lock()
 
@@ -138,7 +138,10 @@ def docker_images() -> list[str]:
 
 
 def make_handler(port: int, jobs: Jobs, public: bool = False, allowed_hosts: list[str] | None = None,
-                 wheel: Path | None = None, trust_proxy: bool = False):
+                 wheel: Path | None = None, trust_proxy: int = 0, client_ip_header: str | None = None,
+                 host_scan: bool = True, scan_dir: str | None = None):
+    # host_scan=False is for the dashboard running in a container: "this computer" would be the container itself, so
+    # only images and mounted folders (scan_dir) are offered.
     # Local mode only answers to its own address (DNS rebinding). Public mode accepts the configured site names, or any.
     allowed = set(allowed_hosts or []) if public else {f"127.0.0.1:{port}", f"localhost:{port}"}
     ui = resources.files("trustwatch").joinpath("ui", "index.html")
@@ -178,8 +181,14 @@ def make_handler(port: int, jobs: Jobs, public: bool = False, allowed_hosts: lis
             return (public and not allowed) or self.headers.get("Host") in allowed
 
         def _client(self) -> str:
-            if trust_proxy and self.headers.get("X-Forwarded-For"):
-                return self.headers["X-Forwarded-For"].split(",")[0].strip()
+            # Rate limiting needs the visitor's address, not the proxy's. A visitor can send any X-Forwarded-For, and
+            # each proxy appends the address it saw, so only the last `trust_proxy` entries are trustworthy.
+            if client_ip_header and self.headers.get(client_ip_header):
+                return self.headers[client_ip_header].strip()
+            if trust_proxy:
+                hops = [h.strip() for h in ",".join(self.headers.get_all("X-Forwarded-For") or []).split(",") if h.strip()]
+                if len(hops) >= trust_proxy:
+                    return hops[-trust_proxy]
             return self.client_address[0]
 
         def do_HEAD(self):
@@ -201,7 +210,8 @@ def make_handler(port: int, jobs: Jobs, public: bool = False, allowed_hosts: lis
                                       "compromised": len(e.compromised)} for e in feed.events],
                           "wheel": f"/download/{wheel.name}" if wheel else None, "max_upload": MAX_UPLOAD}
                 if not public:
-                    status |= {"docker": bool(shutil.which("docker")), "images": docker_images(), "running": jobs.running()}
+                    status |= {"docker": bool(shutil.which("docker")), "images": docker_images(), "running": jobs.running(),
+                               "host_scan": host_scan, "scan_dir": scan_dir}
                 return self._send(200, status)
             if wheel and path == f"/download/{wheel.name}":
                 return self._send(200, wheel.read_bytes(), "application/octet-stream",
@@ -243,7 +253,7 @@ def make_handler(port: int, jobs: Jobs, public: bool = False, allowed_hosts: lis
             bad = [i for i in images if not IMAGE_REF.match(i)] + [p for p in paths + binaries if not os.path.exists(p)]
             if bad:
                 return self._send(400, {"error": f"Not found or not valid: {', '.join(bad)}"})
-            targets = Targets(bool(body.get("host", True)), paths, images, binaries)
+            targets = Targets(host_scan and bool(body.get("host", True)), paths, images, binaries)
             if not (targets.host or paths or images or binaries):
                 return self._send(400, {"error": "Choose at least one thing to scan."})
             try:
@@ -277,12 +287,16 @@ def make_handler(port: int, jobs: Jobs, public: bool = False, allowed_hosts: lis
 
 
 def serve(port: int = 8765, open_browser: bool = True, public: bool = False, bind: str | None = None,
-          allowed_hosts: list[str] | None = None, wheel: str | None = None, trust_proxy: bool = False) -> int:
+          allowed_hosts: list[str] | None = None, wheel: str | None = None, trust_proxy: int = 0,
+          client_ip_header: str | None = None, host_scan: bool = True, scan_dir: str | None = None) -> int:
     bind = bind or ("0.0.0.0" if public else "127.0.0.1")
     wheel_path = Path(wheel) if wheel else None
-    if wheel_path and not wheel_path.is_file():
-        raise SystemExit(f"--wheel: {wheel} does not exist")
-    httpd = ThreadingHTTPServer((bind, port), make_handler(port, Jobs(), public, allowed_hosts, wheel_path, trust_proxy))
+    if wheel_path and wheel_path.is_dir():  # a folder holding the built wheel, e.g. in the Docker image
+        wheel_path = max(wheel_path.glob("trustwatch-*.whl"), key=lambda p: p.stat().st_mtime, default=None)
+    if wheel and not (wheel_path and wheel_path.is_file()):
+        raise SystemExit(f"--wheel: no TrustWatch wheel at {wheel}")
+    httpd = ThreadingHTTPServer((bind, port), make_handler(port, Jobs(), public, allowed_hosts, wheel_path, trust_proxy,
+                                                          client_ip_header, host_scan, scan_dir))
     httpd.daemon_threads = True
     url = f"http://{'127.0.0.1' if bind in ('0.0.0.0', '::') else bind}:{port}/"
     print(f"TrustWatch dashboard ({'public' if public else 'local'} mode): {url}  (Ctrl+C to stop)", flush=True)

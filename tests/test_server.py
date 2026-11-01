@@ -154,3 +154,40 @@ def test_cli_json_opens_in_dashboard():
     # The fields the page checks before rendering a report someone opens.
     assert d["tool"] == "trustwatch" and isinstance(d["stores"], list) and d["events"] and d["summary"]
     assert all({"name", "group", "verdict", "findings", "id"} <= set(s) for s in d["stores"])
+
+
+@pytest.mark.parametrize("opts,headers,limited", [
+    # Behind one proxy, the visitor controls everything left of the address the proxy appended.
+    ({"trust_proxy": 1}, lambda i: {"X-Forwarded-For": f"10.0.0.{i}, 203.0.113.7"}, True),
+    # Without --trust-proxy every request comes from the proxy (here: the test client), so forged headers change nothing.
+    ({}, lambda i: {"X-Forwarded-For": f"10.0.0.{i}"}, True),
+    # A CDN header names the visitor; different visitors are counted separately.
+    ({"client_ip_header": "CF-Connecting-IP"}, lambda i: {"CF-Connecting-IP": f"198.51.100.{i}"}, False),
+])
+def test_rate_limit_uses_the_address_a_visitor_cannot_forge(tmp_path, monkeypatch, opts, headers, limited):
+    monkeypatch.setattr(server, "CHECKS_PER_WINDOW", 2)
+    httpd = ThreadingHTTPServer(("127.0.0.1", 0), None)
+    httpd.RequestHandlerClass = server.make_handler(httpd.server_address[1], server.Jobs(), public=True, **opts)
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    url = f"http://127.0.0.1:{httpd.server_address[1]}"
+    try:
+        codes = [upload(url, b"junk", headers=headers(i))[0] for i in range(4)]
+    finally:
+        httpd.shutdown()
+    assert (codes[2:] == [429, 429]) is limited and codes[:2] == [200, 200]
+
+
+def test_container_dashboard_never_scans_itself(tmp_path, monkeypatch):
+    monkeypatch.setattr(server, "DATA", tmp_path / "scans")
+    httpd = ThreadingHTTPServer(("127.0.0.1", 0), None)
+    port = httpd.server_address[1]
+    httpd.RequestHandlerClass = server.make_handler(port, server.Jobs(), host_scan=False, scan_dir="/scan")
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    url = f"http://127.0.0.1:{port}"
+    try:
+        status = call(url + "/api/status")[1]
+        assert status["host_scan"] is False and status["scan_dir"] == "/scan"
+        code, body = call(url + "/api/scan", {"host": True}, {"X-TrustWatch": "1"})
+        assert code == 400 and "at least one" in body["error"]
+    finally:
+        httpd.shutdown()

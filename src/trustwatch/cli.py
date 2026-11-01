@@ -81,9 +81,19 @@ def main(argv: list[str] | None = None) -> int:
                     help="with --public, only answer requests for this Host header, e.g. trustwatch.example.com (repeatable)")
     sv.add_argument("--wheel", default=os.environ.get("TRUSTWATCH_WHEEL"),
                     help="offer this TrustWatch wheel for download, so visitors can run the scanner (default: $TRUSTWATCH_WHEEL)")
-    sv.add_argument("--trust-proxy", action="store_true", help="rate-limit by X-Forwarded-For (only behind your own proxy)")
+    sv.add_argument("--trust-proxy", type=int, nargs="?", const=1, default=int(os.environ.get("TRUSTWATCH_TRUST_PROXY", 0)),
+                    metavar="N", help="behind N proxies of your own (default 1 when given), rate-limit by the address "
+                                      "they add to X-Forwarded-For (default: $TRUSTWATCH_TRUST_PROXY or 0)")
+    sv.add_argument("--client-ip-header", default=os.environ.get("TRUSTWATCH_CLIENT_IP_HEADER"), metavar="NAME",
+                    help="take the visitor's address from this header set by your CDN, e.g. CF-Connecting-IP; only when "
+                         "the server is reachable through that CDN alone (default: $TRUSTWATCH_CLIENT_IP_HEADER)")
+    sv.add_argument("--no-host", action="store_true", help="do not offer to scan this machine, only images and folders "
+                                                           "(for the dashboard running in a container)")
+    sv.add_argument("--scan-dir", default=os.environ.get("TRUSTWATCH_SCAN_DIR"), metavar="DIR",
+                    help="folder to suggest for scanning, e.g. where host folders are mounted (default: $TRUSTWATCH_SCAN_DIR)")
     sv.set_defaults(func=lambda a: __import__("trustwatch.server", fromlist=["serve"]).serve(
-        a.port, not a.no_open, a.public, a.bind, a.allowed_host, a.wheel, a.trust_proxy))
+        a.port, not a.no_open, a.public, a.bind, a.allowed_host, a.wheel, a.trust_proxy, a.client_ip_header,
+        not a.no_host, a.scan_dir))
     sub.add_parser("update-feed", help="download the current Mozilla root store and CCADB reports").set_defaults(func=cmd_update)
     sub.add_parser("events", help="show the reference data and incident feeds in use").set_defaults(func=cmd_events)
     argv = sys.argv[1:] if argv is None else argv

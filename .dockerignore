@@ -3,3 +3,7 @@
 **/__pycache__
 *.html
 dist
+reports
+.git
+.pytest_cache
+.claude

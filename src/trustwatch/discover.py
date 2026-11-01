@@ -63,7 +63,8 @@ def os_platform(os_release: str | None = None) -> str | None:
             return None
     ids = " ".join(re.findall(r'^(?:ID|ID_LIKE)="?([^"\n]+)', os_release, re.M)).lower().split()
     for key, names in (("debian", {"debian", "ubuntu", "devuan"}), ("alpine", {"alpine"}), ("arch", {"arch"}),
-                       ("fedora", {"fedora", "rhel", "centos", "rocky", "almalinux", "amzn"})):
+                       ("fedora", {"fedora", "rhel", "centos", "rocky", "almalinux", "amzn", "ol"}),
+                       ("suse", {"suse", "opensuse", "sles", "opensuse-leap", "opensuse-tumbleweed"}), ("nixos", {"nixos"})):
         if names & set(ids):
             return key
     return None
@@ -87,12 +88,25 @@ def classify(path: str, read=None) -> tuple[str, str | None, str | None]:
     if p.endswith("/certifi/cacert.pem"):
         return "certifi", "certifi", _version_in(read(p.rsplit("/", 1)[0] + "/__init__.py") or "")
     if p.endswith("/lib/security/cacerts"):
-        home = java_home(p)
-        m = re.search(r'JAVA_VERSION="([^"]+)"', read(home + "/release") or "")
-        return "java", "java", m.group(1) if m else None
+        return "java", "java", java_version(read(java_home(p) + "/release") or "")
     if p in OS_BUNDLES:
         return OS_BUNDLES[p], "homebrew" if OS_BUNDLES[p] == "homebrew" else None, None
     return "file", "generic", None
+
+
+def java_version(release: str) -> str | None:
+    """Version and vendor from a JDK's `release` file, e.g. "21.0.9 (Eclipse Adoptium)" or "21.0.13 (Oracle JDK)"."""
+    field = lambda k: (m.group(1) if (m := re.search(rf'^{k}="([^"]*)"', release, re.M)) else "")
+    version, implementor = field("JAVA_VERSION"), field("IMPLEMENTOR")
+    if not version:
+        return None
+    if "JetBrains" in implementor:
+        vendor = "JetBrains Runtime"
+    elif implementor.startswith("Oracle") and field("BUILD_TYPE") == "commercial":
+        vendor = "Oracle JDK"
+    else:
+        vendor = implementor
+    return f"{version} ({vendor})" if vendor else version
 
 
 def java_extras(home: str, read=None) -> tuple[set[str], list[str]]:

@@ -25,7 +25,8 @@ PEM_MARK = b"-----BEGIN CERTIFICATE-----"
 TOOLS = {"uv": "uv", "bun": "bun", "deno": "deno", "rustup": "rustup", "pixi": "pixi", "mise": "mise", "claude": "claude"}
 ELECTRON_APPS = ["/Applications/*.app", os.path.expanduser("~/Applications/*.app")]
 # Version strings that runtimes embed in their own binary, for images where the program cannot be run.
-VERSION_RE = [re.compile(rb"nodejs\.org/download/release/(v\d+\.\d+\.\d+)/"), re.compile(rb"Bun v(\d+\.\d+\.\d+) \(")]
+# Bun first: it also embeds the Node.js release it is compatible with.
+VERSION_RE = [re.compile(rb"Bun v(\d+\.\d+\.\d+) \("), re.compile(rb"nodejs\.org/download/release/(v\d+\.\d+\.\d+)/")]
 _spki: dict[str, bytes] = {}
 
 

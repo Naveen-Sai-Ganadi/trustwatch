@@ -56,9 +56,12 @@ def chain_trusted(store: Store, host: str, chain: list[Cert], when: datetime) ->
 
 
 def version_status(installed: str | None, patched: list[dict]) -> str | None:
-    """Compare an installed version with the patched releases for its line. Returns 'patched', 'unpatched' or None."""
+    """Compare an installed version with the patched releases for its line. Returns 'patched', 'unpatched', 'pending'
+    (no fix released yet) or None."""
     if not installed or not patched:
         return None
+    if all(p["patched"].lower().startswith("pending") for p in patched):
+        return "pending"
     m = re.search(r"pip (\S+?),", installed)  # pip-vendored: "pip 25.3, certifi 2025.10.05"
     nums = lambda s: tuple(int(x) for x in re.findall(r"\d+", s))
     dotted = re.search(r"\d+(?:\.\d+)+", m.group(1) if m else installed)
@@ -79,22 +82,44 @@ def _fix(store: TrustStore, event: Event) -> tuple[list[str], list[dict]]:
     fallback = "embedded" if store.kind == "embedded" else "generic"
     fix = [line for k in keys for line in event.remediation.get(k) or event.remediation.get(fallback, [])]
     patched = [p for k in keys for p in event.patched_for(k)]
+    if store.kind == "java":
+        patched = java_rows(patched, store.version)
     return fix, patched
 
 
+def java_rows(rows: list[dict], version: str | None) -> list[dict]:
+    """Keep the patched row for this JDK's vendor. Builds that are not clearly Oracle JDK or JetBrains Runtime count
+    as OpenJDK, so an unknown build is never credited with another vendor's fix."""
+    vendors = [r for r in rows if r["software"].startswith("Java (")]
+    if not vendors:
+        return rows
+    v = version or ""
+    vendor = "JetBrains Runtime" if "JetBrains" in v else "Oracle JDK" if "Oracle JDK" in v else "OpenJDK"
+    return [r for r in vendors if r["software"] == f"Java ({vendor})"]
+
+
 def _event_finding(store: TrustStore, ev: Event, x509_store: Store | None, by_fp: dict[str, Cert]) -> Finding | None:
-    # Verify at the event date: the published test leaves expire, but the trust problem does not.
-    when = datetime.fromisoformat(ev.date).replace(hour=12, tzinfo=timezone.utc)
     inside = [ev.compromised[fp]["name"] for fp in by_fp if fp in ev.compromised and fp not in store.blocked]
     affected = [r["name"] for r in ev.affected_roots if r["sha256"].upper() in by_fp]
     blocked = [i["name"] for fp, i in ev.compromised.items() if fp in store.blocked]
     trusted, undecided = [], []
     for host, chain in ev.test_chains:
+        when = ev.verify_time(chain)
         if store.verifier:
             ok = store.verifier(host, chain, when)
             (undecided if ok is None else trusted if ok else []).append(host)
         elif x509_store and not any(c.sha256 in store.blocked for c in chain) and chain_trusted(x509_store, host, chain, when):
             trusted.append(host)
+    if x509_store:
+        # A rollover chain adds a self-issued CA between the leaf and a compromised intermediate. RFC 5280 does not count
+        # it against path length, so OpenSSL-based clients accept it wherever the path above it is trusted; the
+        # cryptography verifier is stricter. Judge it as OpenSSL does, from the chain that shares that path.
+        accepted_paths = {tuple(c.sha256 for c in chain[1:]) for h, chain in ev.test_chains if h in trusted}
+        for host, chain in ev.test_chains:
+            if (ev.chain_kinds.get(host) == "rollover" and host not in trusted and not store.verifier
+                    and tuple(c.sha256 for c in chain[2:]) in accepted_paths
+                    and not any(c.sha256 in store.blocked for c in chain)):
+                trusted.append(host)
     # Windows fetches roots on demand, so only the Disallowed store proves the certificates are blocked.
     windows_unconfirmed = store.platform == "windows" and len(set(ev.compromised) - store.blocked) > 0
     if not (inside or trusted or windows_unconfirmed or undecided):
@@ -105,6 +130,9 @@ def _event_finding(store: TrustStore, ev: Event, x509_store: Store | None, by_fp
         detail += f"This store accepted {len(trusted)} of {len(ev.test_chains)} published test chains. "
     if undecided:
         detail += f"The OS verifier gave no clear answer for {len(undecided)} chains. "
+    if store.kind != "os-verifier" and any(ev.chain_kinds.get(h) in ("noct", "rollover") for h in trusted):
+        detail += ("That includes chains whose certificates were never logged to Certificate Transparency, so an attacker "
+                   "could use the leaked keys against this client without leaving a public record. ")
     if inside:
         detail += "It contains a compromised intermediate certificate itself. "
     if blocked:
@@ -112,6 +140,8 @@ def _event_finding(store: TrustStore, ev: Event, x509_store: Store | None, by_fp
     status = version_status(store.version, patched) if store.kind in VERSIONED else None
     if status == "unpatched":
         detail += f"Installed version {store.version} is older than the patched release. "
+    elif status == "pending":
+        detail += f"No patched release of this software has been published yet (installed: {store.version}). "
     elif status == "patched" and trusted:
         detail += f"Installed version {store.version} is at or above a patched release, yet this copy still trusts the chains; it may be a stale second copy. "
     if store.anchors_only:

@@ -54,14 +54,19 @@ A scan goes through four steps.
    removed roots and of roots with a distrust-after date, and one folder per incident. Everything ships in the package,
    so scans work offline.
 3. **Check each store** (`analyze.py`). For every incident, TrustWatch verifies the incident's published test chains
-   against the store with `cryptography`'s X.509 verifier, as a TLS client would. It does this at the incident date,
-   because the test certificates expire but the trust problem does not. If a chain verifies, the store would accept a
-   forged certificate, which is critical. Stores with their own block list (a JDK's `blocked.certs` and distrust policies,
+   against the store with `cryptography`'s X.509 verifier, as a TLS client would. Each chain is checked at a time it was
+   valid (the incident date, or just after a later leaf was issued), because the test certificates expire but the trust
+   problem does not. If a chain verifies, the store would accept a forged certificate, which is critical. The eMudhra
+   set has three kinds of chain: the 12 served by the live test sites, 2 whose leaves were never logged to Certificate
+   Transparency (a store that accepts these can be attacked unnoticed), and 2 built through a "key rollover" CA that a
+   compromised key issued. RFC 5280 clients such as OpenSSL accept rollover chains wherever the path above them is
+   trusted, while `cryptography` is stricter, so TrustWatch counts them the way OpenSSL does. Stores with their own block list (a JDK's `blocked.certs` and distrust policies,
    the Windows Disallowed store) have it applied first. The macOS check asks Apple's verifier instead. After that come the
    fingerprint checks: compromised certificates inside the store, roots Mozilla removed, partial distrust, email-only
    roots, a stale copy, and expired or private roots.
 4. **Report** (`report.py`). Each finding comes with the fix for that kind of store, and the installed version is
-   compared with the incident's patched releases. The output is text, JSON (`--json`, the same data the dashboard
+   compared with the incident's patched releases. For Java the vendor counts: a JDK's `release` file says whether it is
+   Oracle JDK, JetBrains Runtime or another OpenJDK build, and only that vendor's fix applies. The output is text, JSON (`--json`, the same data the dashboard
    shows) or one HTML file (`--html`). The exit code follows `--fail-on`.
 
 Roots compiled into programs are found in one of two ways. Node, Bun and Electron embed PEM text, which is parsed.
@@ -70,7 +75,8 @@ every root it knows. These stores are marked partial, because a root TrustWatch 
 
 **Adding an incident:** create a folder in `src/trustwatch/data/events/` with `event.json` (affected roots, compromised
 certificates, patched versions, fixes), `roots.pem` and the test chains in `chains/`. See
-`scripts/import_emudhra.py` for how the eMudhra folder was built from the researchers' published data.
+`src/trustwatch/emudhra.py` for how the eMudhra folder is built from the researchers' published data; it checks that
+every published fingerprint matches its certificate before accepting an update.
 
 ## Dashboard
 
@@ -80,7 +86,7 @@ uv run trustwatch serve        # opens http://127.0.0.1:8765
 
 The start page explains the incident in plain language and offers three ways to check:
 
-- **Test this browser:** the page tries to open the incident's 12 live test sites. A protected browser refuses all of them. A control request to the researchers' page first makes sure a refusal means something (an offline machine or a content blocker would otherwise look "protected").
+- **Test this browser:** the page tries to open the incident's 12 live test sites (the ones logged to Certificate Transparency, so the answer reflects trust alone). A protected browser refuses all of them. A control request to the researchers' page first makes sure a refusal means something (an offline machine or a content blocker would otherwise look "protected").
 - **Scan a computer or image:** "Scan this computer", or "Choose what to scan" to add Docker images, folders and programs.
 - **Open a report or check one file:** drop a `trustwatch scan --json` report (read in the browser, never uploaded), or a CA bundle, Java keystore or program up to 100 MB (checked in memory, not stored).
 
@@ -88,21 +94,63 @@ Results show one sentence on how many certificate lists trust the incident's cer
 
 Locally the server listens on 127.0.0.1 only, rejects other Host headers (DNS rebinding) and requires a custom header on POST (cross-site requests). It reads trust stores and never changes them.
 
+## Docker Compose
+
+Everything runs in containers; only Docker is needed. `make` wraps the commands (each target prints what it runs).
+
+| Command | What it does |
+|---|---|
+| `make up` | The website at http://localhost:8080: the `web` service behind a Caddy proxy |
+| `make dashboard` | The local dashboard at http://127.0.0.1:8765. It scans your Docker images and the folder in `SCAN_DIR` (default: this folder, mounted read-only at `/scan`) |
+| `make scan ARGS="--image node:22-slim"` | A one-off scan. Reports land in `reports/` as JSON and HTML |
+| `make update` | Downloads the latest Mozilla data and incident data into a shared volume, then restarts the website |
+| `make test` | The test suite, in a container |
+| `make down` / `make logs` | Stop everything / follow the logs |
+
+Without `make`: `docker compose up -d --build web proxy`, `docker compose --profile dashboard up -d dashboard`,
+`docker compose run --rm scan --image app:1.2`, `docker compose run --rm update`, `docker compose run --rm test`.
+
+Settings (environment variables or a `.env` file): `HTTP_PORT` (website, default 8080), `DASHBOARD_PORT` (default 8765),
+`SCAN_DIR` (folder offered to the dashboard and scans).
+
+The dashboard and scanner use the host's Docker socket to read images. They never start the images, but access to that
+socket is root-equivalent, so the dashboard listens on 127.0.0.1 only. Inside a container "this computer" would be the
+container itself, so the containerised dashboard offers images and folders only; to scan the machine itself, run
+TrustWatch directly (`uvx`, below).
+
 ## Hosting it on a website
+
+On a server whose domain points at it:
+
+```sh
+SITE_ADDRESS=trustwatch.example.com make prod   # compose.yaml + compose.prod.yaml: ports 80 and 443, automatic HTTPS
+```
+
+Or run the image alone behind your own HTTPS proxy:
 
 ```sh
 docker build -t trustwatch-web .
-docker run -p 8080:8080 trustwatch-web          # then put it behind your HTTPS proxy
+docker run -p 8080:8080 trustwatch-web
 ```
 
 The image runs `trustwatch serve --public` as a non-root user. Public mode is built for strangers on the internet:
 
 - It **never scans the server**: `/api/scan` and the scan history are disabled.
 - Visitors test their own browser, open reports in the page, or check single files. Uploads are checked in memory and never stored. They are limited to 100 MB, 2 at a time, and 30 per client IP per 10 minutes.
-- The image serves its own wheel at `/download/…whl`, so the page shows a working command for visitors' machines: `uvx --from https://your-site/download/trustwatch-0.1.0-py3-none-any.whl trustwatch scan --json trustwatch-report.json`. Outside Docker, pass `--wheel` (or set `TRUSTWATCH_WHEEL`) after `uv build`.
+- The image serves its own wheel at `/download/…whl`, so the page shows a working command for visitors' machines: `uvx --from https://your-site/download/trustwatch-0.2.0-py3-none-any.whl trustwatch scan --json trustwatch-report.json`. Outside Docker, pass `--wheel` (a wheel or the `dist` folder; or set `TRUSTWATCH_WHEEL`) after `uv build`.
 - Headers: a strict CSP (scripts from the page itself only; connections only to itself and the incident's test sites), `frame-ancestors 'none'`, `Referrer-Policy: no-referrer`, `nosniff`.
 
-Options: `--allowed-host trustwatch.example.com` answers only that Host name; `--trust-proxy` rate-limits by `X-Forwarded-For`, so use it only behind your own proxy; `PORT` sets the port (default 8080 in the image). `/healthz` is for load balancers. Serve it over HTTPS: browsers only allow copy buttons on secure pages.
+Options:
+
+- `--allowed-host trustwatch.example.com` answers only that Host name.
+- Behind a proxy, rate limits need the visitor's address. `--trust-proxy N` (or `TRUSTWATCH_TRUST_PROXY=N`) takes it from
+  `X-Forwarded-For`, counting N entries from the right: one per proxy of yours. Visitors can forge everything to the
+  left, so it is never read. Behind a CDN that sets its own header and is the only way in, use
+  `--client-ip-header CF-Connecting-IP` (Cloudflare) or the CDN's equivalent instead. The Compose setup uses
+  `--trust-proxy 1` for its Caddy proxy.
+- `PORT` sets the port (default 8080 in the image). `/healthz` is for load balancers.
+
+Serve it over HTTPS: browsers only allow copy buttons on secure pages (and on `localhost`).
 
 ## Run it on your own stack
 
@@ -141,7 +189,7 @@ uv run trustwatch -v                   # with details and informational findings
 uv run trustwatch scan --path ./my-service --image my-service:latest
 uv run trustwatch scan --no-host --binary ./bin/my-go-service
 uv run trustwatch scan --no-host --image app:1.2 --json results.json --html report.html
-uv run trustwatch update-feed          # refresh Mozilla reference data into ~/.cache/trustwatch
+uv run trustwatch update-feed          # refresh Mozilla and incident data into ~/.cache/trustwatch
 uv run trustwatch events               # show the reference data and incidents in use
 ```
 
@@ -149,22 +197,31 @@ Exit code is 1 when any store is at or above `--fail-on` (default `high`).
 
 ## Data
 
-The data ships bundled, so scans work offline. `update-feed` overrides the Mozilla reference data with fresh copies.
+The data ships bundled, so scans work offline. `update-feed` downloads fresh copies of the Mozilla data and of each
+incident's published files into the cache. A cached incident is used only while it is newer than the bundled one, so
+upgrading TrustWatch never leaves you on older data, and a damaged cache falls back to the bundled copy.
 
 - `data/reference.pem` comes from https://curl.se/ca/cacert.pem, Mozilla's roots as of 2026-10-20.
 - `data/mozilla-removed.csv` and `data/mozilla-included.csv` are Mozilla CCADB reports.
-- `data/events/emudhra-2026-10/` was built by `scripts/import_emudhra.py` from https://emudhra.we-have-a-problem.com/. It holds the affected roots, the 16 compromised certificates, the 12 published test chains, the patched-versions table and per-platform workarounds.
+- `data/events/emudhra-2026-10/` is built by `scripts/import_emudhra.py` (which runs `trustwatch.emudhra`) from
+  https://emudhra.we-have-a-problem.com/, as published on 2026-10-31. It holds the affected roots, the 16 compromised
+  certificates, the 16 published test chains, the patched-versions table (82 releases) and per-platform workarounds.
 
 ## Tests
 
-`uv run --group dev pytest` runs unit tests on generated PKIs and on the bundled real data, plus integration tests that
-call the macOS verifier and scan the `eclipse-temurin:21-jre` and `oven/bun:1-slim` images. Each integration test skips
-when its dependency is missing.
+`uv run --group dev pytest` (or `make test`) runs unit tests on generated PKIs and on the bundled real data, plus
+integration tests that call the macOS verifier and scan the `eclipse-temurin:21-jre` and `oven/bun:1-slim` images. Each
+integration test skips when its dependency is missing. GitHub Actions runs the suite on Linux, macOS and Windows, scans
+each runner, and builds and smoke-tests the Docker images.
 
 ## Limitations
 
 - **Raw trust anchors:** only roots TrustWatch has a certificate for can be recognised (current Mozilla roots plus incident roots), so those stores are marked partial and are not checked for staleness.
-- **Windows** support is unit-tested with a simulated certificate API but has not been run on a real Windows machine. Microsoft's automatic disallowed list may block certificates that are not in the Disallowed store, which is why a missing entry alone is reported as "cannot confirm" (medium).
+- **Windows** support is unit-tested with a simulated certificate API, and CI scans a real Windows runner. Microsoft's automatic disallowed list may block certificates that are not in the Disallowed store, which is why a missing entry alone is reported as "cannot confirm" (medium).
 - **macOS verifier:** this checks the system TLS stack. Apps that enforce Certificate Transparency (Safari) reject more than it does.
 - **Go programs** normally use the OS store and need no separate check. Programs that bundle `x509roots/fallback` are found with `--binary`.
 - **New incidents** are added as event directories, one per incident.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

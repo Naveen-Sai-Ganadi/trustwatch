@@ -1,0 +1,11 @@
+# On a server with a domain pointing at it:
+#   SITE_ADDRESS=trustwatch.example.com docker compose -f compose.yaml -f compose.prod.yaml up -d --build
+# Caddy answers on ports 80 and 443 and fetches the HTTPS certificate for SITE_ADDRESS.
+services:
+  proxy:
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:?set SITE_ADDRESS to your domain}
+    ports: !override
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"

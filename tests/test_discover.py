@@ -5,7 +5,7 @@ from cryptography.hazmat.primitives import serialization
 from pki import make, pem
 
 from trustwatch.cli import main
-from trustwatch.discover import classify, load_bundle, os_platform, path_stores
+from trustwatch.discover import classify, java_version, load_bundle, os_platform, path_stores
 
 
 def jks(*certs) -> bytes:
@@ -31,6 +31,10 @@ def test_classify_paths():
     assert classify("/s/pip/_vendor/certifi/cacert.pem", read) == ("pip-vendored", "pip", "pip 21.2.4, certifi 2021.05.30")
     assert classify("/s/certifi/cacert.pem", read) == ("certifi", "certifi", "2026.10.19")
     assert classify("/jdk/lib/security/cacerts", read) == ("java", "java", "21.0.5")
+    assert java_version('JAVA_VERSION="21.0.9"\nIMPLEMENTOR="Eclipse Adoptium"\n') == "21.0.9 (Eclipse Adoptium)"
+    assert java_version('IMPLEMENTOR="Oracle Corporation"\nJAVA_VERSION="21.0.13"\nBUILD_TYPE="commercial"\n') == "21.0.13 (Oracle JDK)"
+    assert java_version('IMPLEMENTOR="Oracle Corporation"\nJAVA_VERSION="21.0.13"\n') == "21.0.13 (Oracle Corporation)"  # jdk.java.net OpenJDK
+    assert java_version('JAVA_VERSION="21.0.9"\nIMPLEMENTOR="JetBrains s.r.o."\n') == "21.0.9 (JetBrains Runtime)"
     assert classify("/Library/Developer/CommandLineTools/x/pip/_vendor/certifi/cacert.pem", read)[1] == "macos-pip"
 
 
@@ -38,6 +42,8 @@ def test_os_platform_from_os_release():
     assert os_platform('ID=ubuntu\nID_LIKE=debian\n') == "debian"
     assert os_platform('ID="rocky"\nID_LIKE="rhel centos fedora"\n') == "fedora"
     assert os_platform("ID=alpine\n") == "alpine"
+    assert os_platform('ID="opensuse-leap"\nID_LIKE="suse opensuse"\n') == "suse"
+    assert os_platform("ID=nixos\n") == "nixos"
     assert os_platform("ID=plan9\n") is None
 
 

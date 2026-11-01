@@ -335,7 +335,7 @@ textarea { width: 100%; min-height: 64px; background: var(--paper); border: 1px 
     <div class="dlg">
       <h2 id="dlgTitle">Choose what to scan</h2>
       <p>TrustWatch only reads certificate lists and asks the system to check the test chains. It never changes anything.</p>
-      <div class="field">
+      <div class="field" id="hostField">
         <label class="check"><input type="checkbox" id="optHost" checked> <span><b>This computer</b><br><span class="hint">System lists, Homebrew, every Python and pip copy, Node, Java, desktop apps built on Electron (Slack, VS Code and others), tools like uv and Bun, and the system's own check.</span></span></label>
       </div>
       <div class="field">
@@ -569,7 +569,17 @@ function renderWays() {
     [["unix", "macOS and Linux"], ["windows", "Windows"]].map(([k, name]) => h("button", { type: "button", role: "tab", "aria-selected": String(k === os),
       onclick: (e) => { os = k; tabs.querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", String(b === e.currentTarget))); installBox.replaceChildren(cmd(installs[k])); } }, name)));
 
-  const runner = local
+  const inContainer = local && state.status?.host_scan === false;
+  const runner = inContainer
+    ? h("div", { class: "way" },
+        h("h3", {}, "Scan images and folders"),
+        h("p", {}, "TrustWatch is running in a Docker container, so it checks the Docker images on this computer and the folders mounted into it",
+          state.status.scan_dir ? [" (", h("code", {}, state.status.scan_dir), ")"] : "", ". To check this computer itself, run TrustWatch outside Docker."),
+        h("div", { class: "local-actions" },
+          h("button", { class: "btn primary big", type: "button", onclick: openDialog }, "Choose what to scan")),
+        state.serverScans.length ? h("p", { class: "count", style: "margin-top:12px" }, `Last scan ${when(state.serverScans[0].finished)}. `,
+          h("button", { class: "linkish", type: "button", onclick: () => openServerScan(state.serverScans[0].id) }, "Open it")) : null)
+    : local
     ? h("div", { class: "way" },
         h("h3", {}, "Scan this computer"),
         h("p", {}, "TrustWatch is running on this computer, so it can check every certificate list here directly: the system, Python, Node, Java, desktop apps and command-line tools, plus any Docker images you choose."),
@@ -716,7 +726,7 @@ function renderOverview(scan) {
   const crumbs = h("div", { class: "crumbs" },
     h("button", { class: "linkish", type: "button", onclick: goHome }, "Start page"),
     h("span", { "aria-hidden": "true" }, "/"),
-    h("span", {}, src?.kind === "file" ? `Report from ${src.label}` : src?.kind === "upload" ? `Check of ${src.label}` : "Scan of this computer"));
+    h("span", {}, src?.kind === "file" ? `Report from ${src.label}` : src?.kind === "upload" ? `Check of ${src.label}` : scan.targets?.host ? "Scan of this computer" : "Scan of images and folders"));
   const kids = [h("h1", {}, hd.title), hd.sub && h("p", {}, hd.sub)];
   const ref = refDate(scan.reference?.mozilla_roots_as_of);
   const meta = [`Checked ${when(scan.finished)}`, plural(scan.stores.length, "certificate list"), ref ? `Mozilla's list as of ${ref}` : null].filter(Boolean);
@@ -760,7 +770,7 @@ function summaryLine(s) {
   const top = s.findings.find(f => f.severity !== "info");
   if (!top) return s.verdict === "ok" ? "No problems found" : (s.findings[0] ? s.findings[0].title : "");
   const ev = top.event && state.scan.events[top.event];
-  const chains = ev ? ev.routes.reduce((n, r) => n + r.hosts.length, 0) : 0;
+  const chains = ev ? ev.chains ?? ev.routes.reduce((n, r) => n + r.hosts.length, 0) : 0;
   if (top.code === "EVENT_TRUSTED" && top.accepted?.length) return `Accepts ${top.accepted.length} of ${chains} compromised chains`;
   return top.title;
 }
@@ -830,6 +840,14 @@ function chainDiagram(scan, finding) {
       h("div", { class: `route-result ${trusted ? "trusted" : "safe"}` },
         trusted ? `Accepts ${hits} of ${r.hosts.length} chains on this path.` : "Rejects every chain on this path.")));
   }
+  const shown = new Set(ev.routes.flatMap(r => r.hosts));
+  const extra = (ev.chains ?? shown.size) - shown.size;
+  if (extra > 0) {
+    const hits = [...accepted].filter(x => !shown.has(x)).length;
+    wrap.append(h("p", { class: `route-result ${hits ? "trusted" : "safe"}` }, hits
+      ? `Also accepts ${hits} of ${extra} extra test chains whose certificates were never logged publicly (Certificate Transparency), so their use would go unnoticed.`
+      : `Rejects the ${plural(extra, "extra test chain")} whose certificates were never logged publicly (Certificate Transparency).`));
+  }
   return wrap;
 }
 
@@ -837,7 +855,7 @@ function fixBlock(f) {
   if (!f.fix?.length && !f.patched?.length) return null;
   const items = [];
   for (const line of f.fix || []) {
-    const isCmd = /^(sudo |sed |apk |trust |d=|F=|brew |pip |python |powershell|apt-get |certutil|keytool )/.test(line) || /&&/.test(line);
+    const isCmd = /^(sudo |sed |apk |trust |d=|F=|t=|\[ |rm |openssl |security\.pki|brew |pip |python |powershell|apt-get |certutil|keytool )/.test(line) || /&&/.test(line);
     items.push(isCmd ? cmd(line) : h("p", { class: "step" }, line));
   }
   return h("div", { class: "fix" }, h("h4", {}, "How to fix"), items,
@@ -930,7 +948,7 @@ function syncHistory() {
   const sel = $("history");
   const saved = savedReports();
   const opts = [];
-  if (state.serverScans.length) opts.push(h("optgroup", { label: "Scans of this computer" }, state.serverScans.map(s =>
+  if (state.serverScans.length) opts.push(h("optgroup", { label: state.status?.host_scan === false ? "Earlier scans" : "Scans of this computer" }, state.serverScans.map(s =>
     h("option", { value: `server:${s.id}` }, `${when(s.finished)}: ${s.summary.critical + s.summary.high} at risk of ${s.stores}`))));
   if (saved.length) opts.push(h("optgroup", { label: "Opened in this browser" }, saved.map((r, i) =>
     h("option", { value: `saved:${i}` }, `${r.label} (${(r.summary?.critical || 0) + (r.summary?.high || 0)} at risk)`))));
@@ -987,6 +1005,11 @@ function openDialog() {
   const imgs = state.status?.images || [];
   list.replaceChildren(...(imgs.length ? imgs.map(i => h("label", {}, h("input", { type: "checkbox", value: i }), i))
     : [h("p", { class: "hint" }, state.status?.docker ? "No images on this computer yet." : "Docker isn't installed, so images can't be scanned.")]));
+  const hostScan = state.status?.host_scan !== false;
+  $("hostField").hidden = !hostScan;
+  $("optHost").checked = hostScan;
+  const dir = state.status?.scan_dir;
+  if (dir) { $("optPaths").placeholder = dir; if (!hostScan && !$("optPaths").value) $("optPaths").value = dir; }
   $("dlgError").hidden = true;
   $("dialog").showModal();
 }
@@ -1005,7 +1028,8 @@ $("startBtn").addEventListener("click", async () => {
     await follow(job.id);
   } catch (e) { $("dlgError").textContent = e.message; $("dlgError").hidden = false; }
 });
-$("scanBtn").addEventListener("click", () => startScan(state.source?.kind === "server" && state.scan ? state.scan.targets : { host: true }));
+$("scanBtn").addEventListener("click", () => state.source?.kind === "server" && state.scan ? startScan(state.scan.targets)
+  : state.status?.host_scan === false ? openDialog() : startScan({ host: true }));
 $("chooseBtn").addEventListener("click", openDialog);
 $("brand").addEventListener("click", () => goHome());
 document.addEventListener("keydown", (e) => { if (e.key === "Escape" && state.selected != null && !$("dialog").open) closeStore(); });

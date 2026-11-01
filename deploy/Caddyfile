@@ -1,0 +1,6 @@
+# Locally SITE_ADDRESS is ":8080" (plain http). Set it to your domain and Caddy serves HTTPS with its own certificate.
+{$SITE_ADDRESS} {
+	encode gzip
+	# Caddy replaces any X-Forwarded-For a visitor sends, so the web service can trust the address it adds.
+	reverse_proxy web:8080
+}
