@@ -231,5 +231,7 @@ def test_without_token_nothing_changes(dash):
 def test_ui_assets_are_served_and_nothing_else(dash):
     status, headers = _get(dash + "/assets/manrope-latin-400-normal.woff2")
     assert status == 200 and headers["Content-Type"] == "font/woff2" and "max-age" in headers.get("Cache-Control", "")
+    status, headers = _get(dash + "/assets/owl-64.png")
+    assert status == 200 and headers["Content-Type"] == "image/png"
     for bad in ("/assets/../index.html", "/assets/%2e%2e/index.html", "/assets/nope.woff2", "/assets/index.html"):
         assert _get(dash + bad)[0] == 404, bad

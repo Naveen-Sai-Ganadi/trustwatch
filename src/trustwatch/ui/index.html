@@ -5,337 +5,473 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TrustWatch</title>
 <meta name="description" content="Check whether your browser, computer, servers and container images still trust the compromised eMudhra certificates, and how to fix each one.">
-<meta name="color-scheme" content="light dark">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='11' width='13' height='10' rx='5' fill='none' stroke='%2318212B' stroke-width='2.6'/%3E%3Crect x='16' y='11' width='13' height='10' rx='5' fill='none' stroke='%23C62E3A' stroke-width='2.6'/%3E%3C/svg%3E">
+<meta name="color-scheme" content="light">
+<link rel="icon" type="image/png" href="/assets/owl-64.png">
 <style>
+/* TrustWatch Prism: white and pale-blue surfaces, navy text, cobalt accents. Colour marks state, never decoration. */
+@font-face { font-family: "Manrope"; font-weight: 400; font-display: swap; src: url("/assets/manrope-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Manrope"; font-weight: 500; font-display: swap; src: url("/assets/manrope-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "Manrope"; font-weight: 600; font-display: swap; src: url("/assets/manrope-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Manrope"; font-weight: 700; font-display: swap; src: url("/assets/manrope-latin-700-normal.woff2") format("woff2"); }
+
 :root {
-  --paper: #EEF1F4; --sheet: #F8FAFB; --ink: #18212B; --steel: #56636F; --rule: #CDD5DD; --rule-soft: #DFE5EA;
-  --red: #B8283A; --red-wash: #F7E3E5; --amber: #9A6413; --amber-wash: #F6ECD9; --blue: #2F5E8C; --blue-wash: #E1EAF3;
-  --green: #1C7254; --green-wash: #DDEFE7; --code: #E6EBF0; --focus: #2F5E8C;
-  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", system-ui, Roboto, "Helvetica Neue", sans-serif;
-  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  --porcelain: #F6F8FC; --white: #FFFFFF; --side-bg: #EEF3FB;
+  --ink: #203453; --ink-2: #4B5D7C; --ink-3: #7686A2;
+  --line: #DCE3F0; --line-soft: #E8EDF6; --line-strong: #C4CFE3;
+  --cobalt: #365FE5; --cobalt-deep: #2849C4; --cobalt-wash: #EAF0FE; --cobalt-soft: #D5E0FC;
+  --coral: #B34C5D; --coral-wash: #FBEDEF; --coral-line: #EFC7CE;
+  --amber: #8F6316; --amber-wash: #FBF2DF; --amber-line: #EED9AC;
+  --sea: #277D67; --sea-wash: #E5F3EE; --sea-line: #BFE0D5;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1); --ease-exit: cubic-bezier(0.4, 0, 1, 1); --ease-std: cubic-bezier(0.2, 0, 0, 1);
+  --spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --shadow-1: 0 1px 2px rgba(32, 52, 83, .05), 0 6px 20px rgba(32, 52, 83, .05);
+  --shadow-2: 0 2px 6px rgba(32, 52, 83, .06), 0 18px 48px rgba(32, 52, 83, .10);
   color-scheme: light;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --paper: #131A22; --sheet: #19222C; --ink: #E4E9EE; --steel: #9AA7B4; --rule: #2C3946; --rule-soft: #24303B;
-    --red: #F06A73; --red-wash: #3A1F25; --amber: #E3A64A; --amber-wash: #382C18; --blue: #82AEDB; --blue-wash: #1D2D3D;
-    --green: #4CC08F; --green-wash: #173328; --code: #222D38; --focus: #82AEDB; color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --paper: #131A22; --sheet: #19222C; --ink: #E4E9EE; --steel: #9AA7B4; --rule: #2C3946; --rule-soft: #24303B;
-  --red: #F06A73; --red-wash: #3A1F25; --amber: #E3A64A; --amber-wash: #382C18; --blue: #82AEDB; --blue-wash: #1D2D3D;
-  --green: #4CC08F; --green-wash: #173328; --code: #222D38; --focus: #82AEDB; color-scheme: dark;
-}
 * { box-sizing: border-box; }
-[hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
-body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.55 var(--sans); }
+body { margin: 0; font: 400 14.5px/1.55 "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink);
+  background: linear-gradient(180deg, #FAFBFE 0, var(--porcelain) 360px); -webkit-font-smoothing: antialiased; font-feature-settings: "tnum" 0; }
+h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.02em; color: var(--ink); }
+p { margin: 0; }
+a { color: var(--cobalt); text-underline-offset: 3px; }
+code, .mono { font-family: var(--mono); font-size: .92em; }
 button, input, textarea, select { font: inherit; color: inherit; }
-:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
-a { color: var(--blue); text-underline-offset: 3px; }
-code, .mono { font-family: var(--mono); font-size: 0.86em; }
-.skip { position: absolute; left: -9999px; top: 8px; z-index: 30; background: var(--ink); color: var(--paper); padding: 8px 12px; border-radius: 6px; }
-.skip:focus { left: 8px; }
+:focus-visible { outline: 2px solid var(--cobalt); outline-offset: 2px; border-radius: 6px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.skip { position: absolute; left: 12px; top: -48px; background: var(--ink); color: #fff; padding: 8px 12px; border-radius: 8px; z-index: 50; }
+.skip:focus { top: 12px; }
+.ico { display: inline-flex; width: 18px; height: 18px; flex: none; }
+.ico svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 
-/* Header */
-.bar { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--paper) 92%, transparent);
-  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--rule); }
-.bar-in { max-width: 1180px; margin: 0 auto; padding: 12px 24px; display: flex; gap: 12px; align-items: center; }
-.brand { display: flex; gap: 10px; align-items: center; font-weight: 700; letter-spacing: -0.01em; font-size: 17px; margin-right: auto;
-  border: 0; background: none; padding: 4px 0; cursor: pointer; }
-.brand svg { width: 26px; height: 26px; }
-.history { display: flex; gap: 8px; align-items: center; color: var(--steel); font-size: 14px; }
-.history select { background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; padding: 7px 8px; max-width: 260px; }
-.btn { border: 1px solid var(--rule); background: var(--sheet); border-radius: 8px; padding: 8px 14px; cursor: pointer; font-weight: 600;
-  font-size: 15px; display: inline-flex; gap: 8px; align-items: center; justify-content: center; text-decoration: none; color: var(--ink); white-space: nowrap; }
-.btn:hover { border-color: var(--steel); }
-.btn.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-.btn.primary:hover { background: color-mix(in srgb, var(--ink) 85%, var(--blue)); }
-.btn.big { padding: 12px 20px; font-size: 16px; border-radius: 10px; }
-.btn:disabled { opacity: .55; cursor: progress; }
-.linkish { border: 0; background: none; padding: 0; color: var(--blue); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
-.progress { height: 3px; overflow: hidden; background: transparent; }
-.progress.on { background: var(--rule-soft); }
-.progress.on::after { content: ""; display: block; height: 100%; width: 30%; background: var(--blue); animation: slide 1.1s ease-in-out infinite; }
-@keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
+/* ---------- shell ---------- */
+.app { display: grid; grid-template-columns: 252px minmax(0, 1fr); min-height: 100vh; }
+.side { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; gap: 18px; padding: 22px 16px 16px;
+  background: linear-gradient(180deg, #F2F6FD, var(--side-bg)); border-right: 1px solid var(--line); overflow-y: auto; }
+.brand { display: flex; align-items: center; gap: 10px; padding: 0 8px; font-weight: 700; font-size: 18px; letter-spacing: -0.02em; background: none; border: 0; cursor: pointer; color: var(--ink); }
+.brand img { width: 34px; height: 34px; }
+.brand .pulse { width: 6px; height: 6px; border-radius: 50%; background: var(--cobalt); margin-left: -4px; align-self: flex-start; margin-top: 8px; }
+.ws { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 12px; border-radius: 14px; background: var(--white);
+  border: 1px solid var(--line); box-shadow: var(--shadow-1); cursor: pointer; }
+.ws .tile { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: var(--cobalt-wash); color: var(--cobalt); }
+.ws b { display: block; font-weight: 600; font-size: 14px; }
+.ws small { display: block; color: var(--ink-3); font-size: 12px; }
+.ws .ico:last-child { margin-left: auto; color: var(--ink-3); width: 16px; }
+.nav-cap { font-size: 12px; color: var(--ink-3); padding: 0 10px; margin-bottom: -10px; }
+.nav { display: flex; flex-direction: column; gap: 4px; }
+.nav button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; border: 1px solid transparent; border-radius: 12px;
+  background: none; cursor: pointer; color: var(--ink-2); font-weight: 500; text-align: left; transition: background .16s var(--ease-std), color .16s; }
+.nav button:hover { background: rgba(255, 255, 255, .7); color: var(--ink); }
+.nav button[aria-current="page"] { background: var(--cobalt-wash); border-color: var(--cobalt-soft); color: var(--cobalt-deep); font-weight: 600; }
+.nav .badge { margin-left: auto; min-width: 22px; padding: 0 6px; height: 20px; border-radius: 10px; display: grid; place-items: center;
+  font-size: 11.5px; font-weight: 700; background: var(--coral-wash); color: var(--coral); }
+.nav .chip { margin-left: auto; }
+.side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 12px; }
+.promise { display: flex; gap: 10px; align-items: center; padding: 0 10px; color: var(--ink-2); font-size: 12.5px; line-height: 1.4; }
+.promise .ico { color: var(--ink-3); }
+.who-card { display: flex; gap: 10px; align-items: center; padding: 12px 10px 0; border-top: 1px solid var(--line); font-size: 12px; color: var(--ink-3); line-height: 1.4; }
+.who-card b { color: var(--ink); font-weight: 600; display: block; font-size: 12.5px; }
+.who-card img { width: 30px; height: 30px; border-radius: 50%; background: var(--white); border: 1px solid var(--line); padding: 3px; }
 
-main { max-width: 1180px; margin: 0 auto; padding: 40px 24px 64px; min-height: 60vh; }
-.muted { color: var(--steel); }
+.work { min-width: 0; display: flex; flex-direction: column; }
+.top { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 16px; height: 62px; padding: 0 32px;
+  background: rgba(250, 251, 254, .82); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--line-soft); }
+.crumbs { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--ink-3); }
+.crumbs b { color: var(--ink); font-weight: 600; }
+.crumbs .ico { width: 14px; }
+.top-right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+.progress { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; overflow: hidden; opacity: 0; transition: opacity .2s; }
+.progress.on { opacity: 1; }
+.progress::after { content: ""; position: absolute; inset: 0; width: 35%; background: linear-gradient(90deg, transparent, var(--cobalt), transparent); animation: slide 1.3s var(--ease-std) infinite; }
+@keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
+.update > div { margin: 16px 32px 0; padding: 10px 14px; border-radius: 12px; background: var(--cobalt-wash); border: 1px solid var(--cobalt-soft);
+  display: flex; gap: 14px; align-items: center; flex-wrap: wrap; font-size: 13.5px; }
+.update a { font-weight: 600; }
+main { flex: 1; padding: 34px 32px 48px; outline: none; }
+.page { max-width: 1240px; margin: 0 auto; }
+.enter { animation: enter .2s var(--ease-enter) both; }
+@keyframes enter { from { opacity: 0; transform: translateY(9px); } }
+.statusbar { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; padding: 10px 32px; border-top: 1px solid var(--line-soft);
+  font-size: 12px; color: var(--ink-3); background: rgba(255, 255, 255, .6); }
+.statusbar .live { display: inline-flex; align-items: center; gap: 8px; }
+.statusbar .live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--sea); }
+.statusbar .mid { margin: 0 auto; }
+.statusbar a { color: var(--ink-2); }
 
-/* ---------- Start page ---------- */
-.hero { max-width: 820px; }
-.hero h1 { font-size: clamp(32px, 5vw, 56px); line-height: 1.04; letter-spacing: -0.03em; margin: 0 0 18px; font-weight: 760; text-wrap: balance; }
-.hero p { font-size: clamp(17px, 1.6vw, 19px); color: var(--steel); margin: 0; max-width: 64ch; }
-.hero .when { margin-top: 14px; font-size: 15px; }
+/* ---------- type and common pieces ---------- */
+.head { display: flex; gap: 24px; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; margin-bottom: 28px; }
+.eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); margin-bottom: 12px; }
+.eyebrow::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--cobalt); }
+.display { font-size: clamp(34px, 4.2vw, 50px); line-height: 1.04; letter-spacing: -0.04em; font-weight: 600; }
+.sub { margin-top: 12px; font-size: 16px; color: var(--ink-2); max-width: 62ch; }
+.meta { margin-top: 10px; font-size: 13px; color: var(--ink-3); }
+.head-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 10px 16px; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--white); color: var(--ink); font-weight: 600; font-size: 14px; cursor: pointer; text-decoration: none; box-shadow: 0 1px 2px rgba(32, 52, 83, .05);
+  transition: transform .16s var(--spring), background .16s, border-color .16s, box-shadow .16s; }
+.btn:hover { border-color: var(--line-strong); background: #FBFCFF; }
+.btn:active { transform: scale(.98); }
+.btn[disabled] { opacity: .55; cursor: progress; }
+.btn.primary { background: linear-gradient(180deg, #4470F0, var(--cobalt)); border-color: var(--cobalt-deep); color: #fff; box-shadow: 0 6px 18px rgba(54, 95, 229, .32), inset 0 1px 0 rgba(255, 255, 255, .25); }
+.btn.primary:hover { background: linear-gradient(180deg, #4D78F2, #3A63E8); }
+.btn.big { padding: 13px 20px; font-size: 15px; }
+.btn.ghost { background: transparent; box-shadow: none; }
+.linkish { background: none; border: 0; padding: 0; color: var(--cobalt); font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.linkish:hover { text-decoration: underline; text-underline-offset: 3px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border-radius: 7px; border: 1px solid var(--line); background: var(--white);
+  font-size: 11.5px; font-weight: 600; color: var(--ink-2); white-space: nowrap; }
+.tag { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 7px; font-size: 12px; font-weight: 600; border: 1px solid; white-space: nowrap; }
+.t-critical, .t-high { color: var(--coral); background: var(--coral-wash); border-color: var(--coral-line); }
+.t-medium, .t-low { color: var(--amber); background: var(--amber-wash); border-color: var(--amber-line); }
+.t-info, .t-ok { color: var(--sea); background: var(--sea-wash); border-color: var(--sea-line); }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex: none; display: inline-block; }
+.s-critical, .s-high { background: var(--coral); } .s-medium, .s-low { background: #C9993F; } .s-info, .s-ok { background: #4FA58C; } .s-partial { background: #A9B6CF; }
+.card { background: var(--white); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow-1); }
+.card-pad { padding: 24px 26px; }
+.card h2 { font-size: 19px; }
+.card .lead { margin-top: 6px; color: var(--ink-2); font-size: 13.5px; }
+.hint { color: var(--ink-3); font-size: 13px; }
+.section { margin-top: 40px; }
+.section > h2 { font-size: 21px; }
+.section-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+.section-head p { margin-top: 4px; color: var(--ink-2); font-size: 14px; }
+.cmd { display: flex; align-items: center; gap: 12px; margin: 10px 0; padding: 12px 14px; border-radius: 12px; background: #F0F4FC; border: 1px solid var(--line);
+  font-family: var(--mono); font-size: 12.8px; color: var(--ink); overflow-x: auto; }
+.cmd span { flex: 1; white-space: pre; }
+.cmd button { flex: none; border: 0; background: none; color: var(--cobalt); cursor: pointer; padding: 4px; border-radius: 6px; display: grid; place-items: center; }
+.cmd button:hover { background: var(--cobalt-wash); }
+.toast { position: fixed; bottom: 54px; left: 50%; transform: translateX(-50%); z-index: 60; background: var(--ink); color: #fff; padding: 10px 16px;
+  border-radius: 12px; font-size: 13.5px; box-shadow: var(--shadow-2); animation: toast .42s var(--spring) both; }
+@keyframes toast { from { opacity: 0; transform: translate(-50%, 14px) scale(.96); } }
 
-.section { margin-top: 56px; }
-.section > h2 { font-size: 24px; letter-spacing: -0.015em; margin: 0 0 6px; line-height: 1.2; }
-.section > .lead { color: var(--steel); margin: 0 0 20px; max-width: 70ch; }
+/* ---------- overview ---------- */
+.ov { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 22px; align-items: start; }
+.stage-card { padding: 20px 20px 0; overflow: hidden; }
+.stage-card .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 4px 6px 0; }
+.stage { position: relative; height: 440px; margin: 0 -20px; overflow: hidden; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none;
+  background: radial-gradient(90% 80% at 50% 30%, #FFFFFF 0%, #F3F6FC 55%, #EAF0F9 100%); }
+.stage.dragging { cursor: grabbing; }
+.scene { position: absolute; inset: 0; perspective: 1700px; perspective-origin: 50% 25%; }
+.rig { position: absolute; left: 50%; top: 70%; width: 0; height: 0; transform-style: preserve-3d; --gap: 44px;
+  transform: scale(var(--s, 1)) rotateX(var(--rx)) rotateZ(var(--rz)); transition: transform .5s var(--ease-enter); }
+.dragging .rig { transition: none; }
+.floor { position: absolute; width: 1100px; height: 1100px; left: -550px; top: -550px; transform: translateZ(-2px); pointer-events: none;
+  background-image: linear-gradient(rgba(54, 95, 229, .085) 1px, transparent 1px), linear-gradient(90deg, rgba(54, 95, 229, .085) 1px, transparent 1px);
+  background-size: 34px 34px; background-position: center; -webkit-mask-image: radial-gradient(closest-side, #000 25%, transparent 100%); mask-image: radial-gradient(closest-side, #000 25%, transparent 100%); }
+.shade { position: absolute; width: 330px; height: 250px; left: -165px; top: -125px; transform: translateZ(-1px); pointer-events: none;
+  background: radial-gradient(closest-side, rgba(32, 52, 83, .26), rgba(32, 52, 83, .08) 60%, transparent); filter: blur(8px); }
+.plate { --w: 250px; --d: 180px; position: absolute; width: var(--w); height: var(--d); left: calc(var(--w) / -2); top: calc(var(--d) / -2);
+  transform: translateZ(calc(var(--i) * (16px + var(--x) * var(--gap)))); transition: transform .95s var(--ease-enter) calc(var(--i) * 45ms), opacity .28s var(--ease-std);
+  cursor: pointer; --top: linear-gradient(135deg, #F6F9FF 0%, #DDE6F8 55%, #C6D4F1 100%); --side: #A3B6E1; --edge: #8EA3D4; }
+.scrubbing .plate { transition: opacity .28s var(--ease-std); }
+/* One flat surface per plate, so the browser always sorts them correctly; the thickness is a stack of shadows (see extrude()). */
+.face { position: absolute; inset: 0; border-radius: 9px; background: var(--top); color: var(--side); overflow: hidden; box-shadow: var(--extrude, none);
+  transition: filter .2s, outline-color .2s; outline: 2px solid transparent; outline-offset: 0; }
+.face::before { content: ""; position: absolute; left: 18%; top: 24%; width: 46%; height: 44%; opacity: .5;
+  background: repeating-linear-gradient(180deg, rgba(32, 52, 83, .16) 0 2px, transparent 2px 13px); }
+.face::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .7);
+  background: linear-gradient(118deg, rgba(255, 255, 255, .7) 0%, rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, .25) 62%, rgba(255, 255, 255, 0) 80%); }
+.plate.tone-risk { --top: linear-gradient(135deg, #F8D9DE 0%, #E39AA7 52%, #C9687A 100%); --side: #B25467; --edge: #963F51; }
+.plate.tone-review { --top: linear-gradient(135deg, #FBEFD6 0%, #EBCB89 55%, #D7AC5C 100%); --side: #C0934A; --edge: #A47A33; }
+.plate.tone-empty { --top: linear-gradient(135deg, rgba(255, 255, 255, .8), rgba(228, 235, 248, .7)); --side: rgba(196, 209, 236, .75); --edge: rgba(170, 187, 224, .8); }
+.plate.tone-empty .face::after { box-shadow: inset 0 0 0 1.5px rgba(54, 95, 229, .3); }
+.plate.tone-empty .face::before { opacity: .18; }
+.plate.cap { --top: linear-gradient(140deg, #FFFFFF 0%, #EEF3FD 60%, #DCE6FA 100%); --side: #4469E4; --edge: #2F52CF; }
+.plate.cap .face::before { display: none; }
+.plate.cap .face img { position: absolute; width: 46%; left: 27%; top: 13%; filter: drop-shadow(0 6px 10px rgba(36, 72, 200, .25)); }
+.plate:hover .face { filter: brightness(1.05); }
+.plate.sel .face { outline-color: var(--cobalt); }
+.plate.dim { opacity: .25; }
+.scanning .plate .face { animation: scanpulse 1.6s var(--ease-std) infinite; animation-delay: calc(var(--i) * 140ms); }
+@keyframes scanpulse { 50% { filter: brightness(1.12) saturate(1.25); } }
+.labels { position: absolute; inset: 0; pointer-events: none; }
+.callout { position: absolute; left: 0; top: 0; white-space: nowrap; padding: 5px 10px; border-radius: 8px; background: rgba(255, 255, 255, .94);
+  border: 1px solid var(--line); box-shadow: 0 4px 14px rgba(32, 52, 83, .08); font-size: 12px; font-weight: 600; color: var(--ink); transition: opacity .25s var(--ease-std); }
+.callout small { font-weight: 500; color: var(--ink-3); margin-left: 6px; }
+.callout.risk small { color: var(--coral); } .callout.review small { color: var(--amber); } .callout.clear small { color: var(--sea); }
+.callout::before { content: ""; position: absolute; right: 100%; top: 50%; width: 22px; height: 1px; background: var(--line-strong); }
+.callout.dim { opacity: .3; }
+.labels.closed .callout { opacity: 0; }
+.stage-note { position: absolute; left: 16px; bottom: 14px; display: flex; gap: 10px; align-items: center; padding: 8px 12px; border-radius: 12px; background: rgba(255, 255, 255, .92);
+  border: 1px solid var(--line); box-shadow: var(--shadow-1); font-size: 13px; max-width: calc(100% - 140px); }
+.stage-hint { position: absolute; left: 18px; top: 14px; font-size: 11.5px; color: var(--ink-3); pointer-events: none; }
+.stage-tools { position: absolute; right: 14px; bottom: 14px; display: flex; gap: 8px; }
+.stage-tools .btn { padding: 6px 10px; font-size: 12px; border-radius: 9px; }
+.stage-empty { position: absolute; left: 18px; top: 44px; max-width: 230px; padding: 14px 16px; border-radius: 14px; background: rgba(255, 255, 255, .9);
+  border: 1px solid var(--line); box-shadow: var(--shadow-1); }
+.stage.is-empty .rig { left: 56%; }
+.stage-empty b { display: block; font-size: 15px; } .stage-empty span { display: block; color: var(--ink-2); font-size: 13px; margin-top: 2px; }
+.stage-phase { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); padding: 6px 12px; border-radius: 999px; background: var(--white); border: 1px solid var(--cobalt-soft);
+  color: var(--cobalt-deep); font-size: 12.5px; font-weight: 600; box-shadow: var(--shadow-1); white-space: nowrap; max-width: 90%; overflow: hidden; text-overflow: ellipsis; }
+.flat-stack { display: flex; flex-direction: column-reverse; gap: 8px; padding: 22px 6px; }
+.flat-stack button { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--white); cursor: pointer; text-align: left; }
+.flat-stack button.sel { border-color: var(--cobalt); box-shadow: 0 0 0 3px rgba(54, 95, 229, .14); }
+.flat-stack .bar { width: 10px; align-self: stretch; border-radius: 4px; background: #B8C7E9; }
+.flat-stack .risk .bar { background: var(--coral); } .flat-stack .review .bar { background: #D3A653; } .flat-stack .empty .bar { background: var(--line); }
+.flat-stack small { margin-left: auto; color: var(--ink-3); }
+.layer-chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 6px 4px; }
+.layer-chips button { display: inline-flex; align-items: center; gap: 8px; padding: 6px 11px; border-radius: 10px; border: 1px solid var(--line); background: var(--white);
+  font-size: 12.5px; font-weight: 600; color: var(--ink-2); cursor: pointer; transition: border-color .16s, background .16s; }
+.layer-chips button[aria-pressed="true"] { border-color: var(--cobalt); background: var(--cobalt-wash); color: var(--cobalt-deep); }
+.layer-chips .n { color: var(--ink-3); font-weight: 500; }
+.dot.risk { background: var(--coral); } .dot.review { background: #D3A653; } .dot.clear { background: #8FA6D8; } .dot.empty { background: transparent; border: 1.5px dashed var(--line-strong); }
+.scrub { display: flex; align-items: center; gap: 14px; margin: 12px -20px 0; padding: 14px 22px; border-top: 1px solid var(--line-soft); background: #FAFBFE; font-size: 12.5px; color: var(--ink-2); }
+.scrub input[type=range] { flex: 1; accent-color: var(--cobalt); height: 20px; }
+.scrub .btn { padding: 7px 12px; font-size: 12.5px; border-radius: 10px; }
+.aside-stack { display: flex; flex-direction: column; gap: 18px; }
+.attention { position: relative; padding: 24px; overflow: hidden; background: linear-gradient(160deg, #FFFFFF 0%, #F2F6FE 100%); transform: perspective(900px) rotateX(var(--ty, 0deg)) rotateY(var(--tx, 0deg));
+  transition: transform .5s var(--ease-enter); }
+.attention::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .3s;
+  background: radial-gradient(240px circle at var(--gx, 50%) var(--gy, 0%), rgba(255, 255, 255, .85), transparent 60%); }
+.attention:hover::after { opacity: 1; }
+.attention .badge-row { display: flex; align-items: center; gap: 10px; }
+.attention .mark { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; }
+.attention.risk .mark { background: var(--coral-wash); color: var(--coral); } .attention.review .mark { background: var(--amber-wash); color: var(--amber); }
+.attention.clear .mark { background: var(--sea-wash); color: var(--sea); } .attention.empty .mark { background: var(--cobalt-wash); color: var(--cobalt); }
+.attention h2 { margin-top: 18px; font-size: 23px; line-height: 1.18; letter-spacing: -0.025em; }
+.attention p { margin-top: 12px; color: var(--ink-2); font-size: 13.8px; }
+.attention .go { margin-top: 18px; width: 100%; justify-content: space-between; color: var(--cobalt-deep); }
+.attention .foot { margin-top: 14px; font-size: 12px; color: var(--ink-3); }
+.attention .actions { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+.coverage h3 { font-size: 15px; display: flex; justify-content: space-between; }
+.coverage h3 small { font-weight: 500; color: var(--ink-3); font-size: 12.5px; }
+.cbar { display: flex; gap: 3px; height: 8px; margin: 14px 0 12px; border-radius: 4px; overflow: hidden; }
+.cbar span { border-radius: 3px; min-width: 4px; }
+.cleg { display: grid; gap: 4px; }
+.cleg button { display: flex; align-items: center; gap: 10px; padding: 5px 6px; margin: 0 -6px; border: 0; background: none; border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--ink-2); text-align: left; }
+.cleg button:hover { background: var(--porcelain); }
+.cleg b { margin-left: auto; font-weight: 600; color: var(--ink); }
+.coverage .note { margin-top: 10px; font-size: 12px; color: var(--ink-3); }
+.diff { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 12px; font-size: 13px; color: var(--ink-2); }
+.diff b.good { color: var(--sea); } .diff b.bad { color: var(--coral); }
+.layer-card h2 { font-size: 20px; margin-top: 14px; }
+.layer-card .mini { margin-top: 16px; display: flex; flex-direction: column; gap: 2px; }
+.layer-card .mini button { display: flex; gap: 10px; align-items: center; padding: 8px 8px; margin: 0 -8px; border: 0; border-radius: 10px; background: none; text-align: left; cursor: pointer; font-size: 13px; }
+.layer-card .mini button:hover { background: var(--porcelain); }
+.layer-card .mini span:nth-child(2) { flex: 1; min-width: 0; line-height: 1.35; overflow-wrap: anywhere; }
 
-/* Browser test: the one memorable element */
-.probe { margin-top: 36px; background: var(--sheet); border: 1px solid var(--rule); border-radius: 16px; padding: 24px; }
-.probe-head { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
-.probe-head > div { flex: 1 1 380px; }
-.probe-head h2 { margin: 0 0 4px; font-size: 22px; letter-spacing: -0.015em; }
-.probe-head p { margin: 0; color: var(--steel); max-width: 62ch; }
-.probe-result:empty { display: none; }
-.probe-result { margin: 22px 0 4px; font-size: clamp(20px, 2.4vw, 26px); font-weight: 700; letter-spacing: -0.015em; line-height: 1.25; min-height: 1.25em; }
-.probe-result.bad { color: var(--red); } .probe-result.good { color: var(--green); }
-.probe-advice { margin: 6px 0 0; color: var(--steel); max-width: 70ch; }
-.lanes { display: grid; gap: 14px; margin-top: 20px; }
-.lane-cap { font-size: 14px; color: var(--steel); margin-bottom: 8px; }
-.lane-cap b { color: var(--ink); font-weight: 600; }
-.cells { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
-.cell { border: 1.5px solid var(--rule); border-radius: 10px; padding: 10px 10px 9px; background: var(--paper); min-height: 66px;
-  display: flex; flex-direction: column; justify-content: space-between; gap: 4px; transition: background .25s, border-color .25s; }
-.cell b { font-size: 14px; font-weight: 650; }
-.cell span { font-size: 12.5px; color: var(--steel); }
-.cell.testing { border-style: dashed; }
-.cell.testing span::after { content: ""; display: inline-block; width: 7px; height: 7px; margin-left: 6px; border-radius: 50%; background: var(--steel);
-  animation: blink 1s ease-in-out infinite; vertical-align: 1px; }
-@keyframes blink { 50% { opacity: .2; } }
-.cell.connected { background: var(--red-wash); border-color: var(--red); }
-.cell.connected span { color: var(--red); font-weight: 600; }
-.cell.refused { background: var(--green-wash); border-color: var(--green); }
-.cell.refused span { color: var(--green); font-weight: 600; }
-.cell.unknown span { color: var(--amber); font-weight: 600; }
-.probe-foot { margin-top: 16px; font-size: 13.5px; color: var(--steel); }
-
-/* Check computers and servers */
-.ways { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 20px; align-items: start; }
-.way { background: var(--sheet); border: 1px solid var(--rule); border-radius: 14px; padding: 22px; }
-.way h3 { margin: 0 0 6px; font-size: 18px; letter-spacing: -0.01em; }
-.way > p { margin: 0 0 14px; color: var(--steel); font-size: 15px; }
-.steps { list-style: none; counter-reset: step; margin: 0; padding: 0; display: grid; gap: 16px; }
-.steps li { counter-increment: step; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; }
-.steps li::before { content: counter(step); width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--ink); display: grid; place-items: center;
-  font-size: 14px; font-weight: 700; }
-.steps h4 { margin: 2px 0 4px; font-size: 15.5px; }
-.steps p { margin: 4px 0; font-size: 14.5px; color: var(--steel); }
-.os-tabs { display: inline-flex; gap: 4px; padding: 3px; background: var(--paper); border: 1px solid var(--rule-soft); border-radius: 8px; margin: 2px 0 4px; }
-.os-tabs button { border: 0; background: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 13.5px; color: var(--steel); }
-.os-tabs button[aria-selected="true"] { background: var(--sheet); color: var(--ink); font-weight: 600; box-shadow: 0 0 0 1px var(--rule); }
-.local-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
-
-.drop { border: 2px dashed var(--rule); border-radius: 12px; padding: 28px 18px; text-align: center; background: var(--paper); cursor: pointer;
-  transition: border-color .15s, background .15s; }
-.drop:hover, .drop.over { border-color: var(--blue); background: var(--blue-wash); }
-.drop b { display: block; font-size: 17px; margin-bottom: 4px; }
-.drop span { color: var(--steel); font-size: 14px; }
-.drop .btn { margin-top: 14px; }
-.kinds { margin: 14px 0 0; padding: 0; list-style: none; font-size: 14px; color: var(--steel); display: grid; gap: 6px; }
-.kinds b { color: var(--ink); font-weight: 600; }
-
-/* What happened */
-.story { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 40px; }
-.timeline { list-style: none; margin: 0; padding: 0; border-left: 2px solid var(--rule); }
-.timeline li { position: relative; padding: 0 0 22px 22px; }
-.timeline li::before { content: ""; position: absolute; left: -7px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--paper); border: 2px solid var(--steel); }
-.timeline li.now::before { background: var(--red); border-color: var(--red); }
-.timeline time { font-size: 13.5px; color: var(--steel); font-weight: 600; display: block; }
-.timeline p { margin: 2px 0 0; }
-.who { margin: 0; }
-.who dt { font-weight: 650; }
-.who dd { margin: 2px 0 18px; color: var(--steel); }
-.glossary { margin-top: 22px; font-size: 15px; }
-.glossary summary { cursor: pointer; font-weight: 600; }
-.glossary p { color: var(--steel); margin: 8px 0; max-width: 70ch; }
-
-footer { border-top: 1px solid var(--rule); margin-top: 24px; }
-.foot-in { max-width: 1180px; margin: 0 auto; padding: 22px 24px 40px; display: grid; gap: 8px; font-size: 13.5px; color: var(--steel); }
-.foot-in p { margin: 0; max-width: 90ch; }
-
-/* ---------- Report ---------- */
-.crumbs { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 18px; font-size: 14px; color: var(--steel); }
-.verdict { max-width: 880px; }
-.verdict h1 { font-size: clamp(28px, 4.2vw, 46px); line-height: 1.08; letter-spacing: -0.025em; margin: 0 0 16px; font-weight: 750; text-wrap: balance; }
-.verdict p { margin: 0 0 8px; color: var(--steel); max-width: 72ch; }
-.status-line { font-size: 14px; color: var(--steel); }
-.diff { margin-top: 14px; display: inline-flex; gap: 14px; flex-wrap: wrap; font-size: 14px; padding: 8px 12px; border-radius: 8px; background: var(--sheet); border: 1px solid var(--rule-soft); }
-.diff b.good { color: var(--green); } .diff b.bad { color: var(--red); }
-.report-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
-
-.spread { margin: 32px 0 8px; }
-.spread-bar { display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: var(--rule-soft); gap: 2px; }
-.spread-bar span { display: block; min-width: 4px; }
-.legend { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-top: 10px; font-size: 14px; }
-.legend button { border: 0; background: none; padding: 2px 0; cursor: pointer; display: inline-flex; gap: 8px; align-items: center; color: var(--steel); }
-.legend button[aria-pressed="true"] { color: var(--ink); font-weight: 650; text-decoration: underline; text-underline-offset: 4px; }
-.meanings { margin-top: 12px; font-size: 14px; }
-.meanings summary { cursor: pointer; color: var(--blue); }
-.meanings dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 10px 0 0; max-width: 760px; }
-.meanings dd { margin: 0; color: var(--steel); }
-.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
-.s-critical { background: var(--red); } .s-high { background: color-mix(in srgb, var(--red) 55%, var(--amber)); }
-.s-medium { background: var(--amber); } .s-low { background: var(--blue); } .s-info { background: var(--steel); } .s-ok { background: var(--green); }
-
-.tools { display: flex; gap: 12px; align-items: center; margin: 28px 0 8px; flex-wrap: wrap; }
-.search { flex: 1 1 260px; max-width: 420px; background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 12px; }
-.count { color: var(--steel); font-size: 14px; }
-
-.group { margin-top: 28px; }
-.group h2 { font-size: 15px; margin: 0 0 8px; font-weight: 650; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
-.group h2 small { color: var(--steel); font-weight: 400; font-size: 13px; }
-.rows { border: 1px solid var(--rule); border-radius: 10px; background: var(--sheet); overflow: hidden; }
-.row { display: grid; grid-template-columns: 14px minmax(0, 1.2fr) minmax(0, 1.6fr) 76px; gap: 14px; align-items: center;
-  width: 100%; text-align: left; border: 0; border-top: 1px solid var(--rule-soft); background: none; padding: 12px 16px; cursor: pointer; }
+/* rows: priority list and findings */
+.rows { display: flex; flex-direction: column; }
+.list-card { overflow: hidden; }
+.row { display: grid; grid-template-columns: 40px minmax(0, 1.3fr) auto minmax(0, 1fr) 20px; gap: 16px; align-items: center; width: 100%; padding: 16px 22px;
+  background: none; border: 0; border-top: 1px solid var(--line-soft); text-align: left; cursor: pointer; transition: background .16s; }
 .row:first-child { border-top: 0; }
-.row:hover { background: color-mix(in srgb, var(--sheet) 60%, var(--rule-soft)); }
-.row[aria-current="true"] { background: var(--blue-wash); }
-.row .name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.row .name small { font-weight: 400; color: var(--steel); margin-left: 6px; }
-.row .what { color: var(--steel); font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tag { font-size: 12.5px; font-weight: 650; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
-.row .tag { justify-self: end; }
-.t-critical { background: var(--red-wash); color: var(--red); } .t-high { background: var(--red-wash); color: color-mix(in srgb, var(--red) 70%, var(--amber)); }
-.t-medium { background: var(--amber-wash); color: var(--amber); } .t-low { background: var(--blue-wash); color: var(--blue); }
-.t-info { background: var(--code); color: var(--steel); } .t-ok { background: var(--green-wash); color: var(--green); }
+.row:hover { background: #FAFBFF; }
+.row:hover .chev { transform: translateX(3px); color: var(--cobalt); }
+.row .tile { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; background: var(--porcelain); border: 1px solid var(--line); color: var(--ink-2); }
+.row .name { font-weight: 600; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .name small { font-weight: 500; color: var(--ink-3); margin-left: 6px; font-size: 12.5px; }
+.row .loc { display: block; font-size: 12px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }
+.row .what { font-size: 13px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .chev { color: var(--ink-3); transition: transform .2s var(--spring), color .16s; width: 18px; }
+.group-cap { display: flex; justify-content: space-between; align-items: baseline; padding: 18px 22px 10px; border-top: 1px solid var(--line); background: #FBFCFE; }
+.group-cap:first-child { border-top: 0; }
+.group-cap h3 { font-size: 14.5px; }
+.group-cap small { font-size: 12.5px; color: var(--ink-3); }
+.allclear { display: flex; gap: 14px; align-items: center; padding: 20px 22px; }
+.allclear .mark { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--sea-wash); color: var(--sea); }
+.tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.filters button { display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--white);
+  font-size: 13px; font-weight: 600; color: var(--ink-2); cursor: pointer; }
+.filters button[aria-pressed="true"] { border-color: var(--cobalt); background: var(--cobalt-wash); color: var(--cobalt-deep); }
+.search { flex: 1; min-width: 220px; padding: 9px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--white); }
+.search:focus { outline: none; border-color: var(--cobalt); box-shadow: 0 0 0 3px rgba(54, 95, 229, .14); }
+.count { color: var(--ink-3); font-size: 13px; }
+details.plain { margin-top: 16px; }
+details.plain summary { cursor: pointer; color: var(--ink-2); font-size: 13.5px; font-weight: 600; }
+details.plain ul, details.plain dl { margin: 10px 0 0; padding-left: 18px; font-size: 13px; color: var(--ink-2); }
+details.plain dl { display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; padding: 0; }
+details.plain dd { margin: 0; }
 
-/* Detail panel */
-.panel { position: fixed; inset: var(--bar-h, 69px) 0 0 auto; width: min(640px, 100vw); background: var(--sheet); border-left: 1px solid var(--rule);
-  box-shadow: -24px 0 48px -32px rgba(24, 33, 43, .45); transform: translateX(100%); transition: transform .22s ease, visibility .22s; z-index: 10;
-  display: flex; flex-direction: column; visibility: hidden; }
-.panel.open { transform: none; visibility: visible; }
-.panel-head { padding: 20px 24px 16px; border-bottom: 1px solid var(--rule-soft); display: flex; gap: 12px; align-items: flex-start; }
-.panel-head h2 { margin: 8px 0 0; font-size: 22px; letter-spacing: -0.015em; line-height: 1.2; }
-.panel-head .path { font-family: var(--mono); font-size: 12.5px; color: var(--steel); word-break: break-all; margin-top: 6px; }
-.close { margin-left: auto; border: 0; background: none; font-size: 24px; line-height: 1; padding: 4px 10px; cursor: pointer; color: var(--steel); border-radius: 6px; }
-.close:hover { background: var(--code); }
-.panel-body { overflow: auto; padding: 8px 24px 40px; overscroll-behavior: contain; }
-.plain { margin: 14px 0 4px; padding: 12px 14px; border-radius: 10px; font-size: 15px; }
-.plain.critical, .plain.high { background: var(--red-wash); } .plain.medium { background: var(--amber-wash); }
-.plain.low, .plain.info { background: var(--code); } .plain.ok { background: var(--green-wash); }
-.facts { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; font-size: 14px; margin: 14px 0 4px; }
-.facts dt { color: var(--steel); } .facts dd { margin: 0; word-break: break-word; }
-.note { font-size: 14px; color: var(--steel); margin: 8px 0 0; }
-.finding { border-top: 1px solid var(--rule-soft); padding: 18px 0 6px; margin-top: 14px; }
-.finding h3 { font-size: 16px; margin: 0 0 6px; display: flex; gap: 10px; align-items: baseline; line-height: 1.35; }
-.finding p { margin: 6px 0; font-size: 14.5px; }
-.finding ul { margin: 6px 0; padding-left: 20px; font-size: 14px; }
-.fix { margin-top: 14px; }
-.fix h4 { font-size: 15px; margin: 0 0 6px; }
-.fix .step { font-size: 14px; margin: 8px 0 4px; }
-.cmd { position: relative; background: var(--code); border-radius: 8px; padding: 10px 74px 10px 12px; font-family: var(--mono); font-size: 12.5px;
-  white-space: pre-wrap; word-break: break-all; margin: 6px 0; }
-.cmd button { position: absolute; top: 6px; right: 6px; font-size: 12px; padding: 3px 9px; border-radius: 6px; border: 1px solid var(--rule); background: var(--sheet); cursor: pointer; font-family: var(--sans); }
-.patched { font-size: 14px; } .sources { font-size: 13px; color: var(--steel); word-break: break-all; }
+/* ---------- evidence dialog ---------- */
+dialog { border: 0; padding: 0; background: transparent; max-width: min(860px, calc(100vw - 32px)); width: 100%; color: var(--ink); }
+dialog::backdrop { background: rgba(32, 52, 83, .28); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+dialog[open] { animation: rise .32s var(--ease-enter); }
+dialog[open]::backdrop { animation: fade .28s var(--ease-std); }
+@keyframes rise { from { opacity: 0; transform: translateY(10px) scale(.985); } }
+@keyframes fade { from { opacity: 0; } }
+.sheet-in { background: var(--white); border-radius: 22px; border: 1px solid var(--line); box-shadow: var(--shadow-2); max-height: calc(100vh - 48px); display: flex; flex-direction: column; overflow: hidden; }
+.sheet-head { display: flex; justify-content: space-between; align-items: center; padding: 18px 26px; border-bottom: 1px solid var(--line-soft); }
+.sheet-head h2 { font-size: 16px; }
+.iconbtn { width: 36px; height: 36px; border-radius: 10px; border: 1px solid transparent; background: none; cursor: pointer; display: grid; place-items: center; color: var(--ink-2); }
+.iconbtn:hover { background: var(--porcelain); border-color: var(--line); }
+.sheet-body { padding: 22px 26px 26px; overflow-y: auto; }
+.sheet-body h3.title { font-size: 26px; letter-spacing: -0.03em; margin-top: 12px; }
+.sheet-body h3.title small { font-size: 15px; font-weight: 500; color: var(--ink-3); margin-left: 8px; letter-spacing: 0; }
+.sheet-body .plainline { margin-top: 8px; color: var(--ink-2); }
+.pathbox { display: flex; gap: 10px; align-items: center; margin-top: 18px; padding: 12px 14px; border-radius: 12px; background: #F0F4FC; border: 1px solid var(--line); font-family: var(--mono); font-size: 12.5px; overflow-x: auto; }
+.pathbox span { white-space: nowrap; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-top: 18px; padding: 16px 0; border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); }
+.facts dt { font-size: 12px; color: var(--ink-3); } .facts dd { margin: 3px 0 0; font-weight: 600; font-size: 13.5px; }
+.finding { margin-top: 24px; }
+.finding > h4 { display: flex; gap: 10px; align-items: center; font-size: 16px; flex-wrap: wrap; }
+.finding > p { margin-top: 10px; color: var(--ink-2); font-size: 13.8px; }
+.finding ul { margin: 10px 0 0; padding-left: 18px; color: var(--ink-2); font-size: 13px; }
+.chain-title { margin-top: 18px; font-size: 14px; font-weight: 600; }
+.route { margin-top: 12px; }
+.route-cap { font-size: 12px; color: var(--ink-3); margin-bottom: 8px; }
+.links { display: flex; align-items: stretch; overflow-x: auto; padding-bottom: 4px; }
+.node { flex: 1 0 140px; max-width: 220px; padding: 12px 14px; border-radius: 12px; background: #F3F6FD; border: 1px solid var(--line); font-size: 12.5px; }
+.node .ico { width: 16px; height: 16px; color: var(--ink-2); display: block; margin-bottom: 8px; }
+.node b { display: block; font-weight: 600; } .node small { display: block; color: var(--ink-3); margin-top: 3px; }
+.node.bad { background: var(--coral-wash); border-color: var(--coral-line); } .node.bad .ico, .node.bad b { color: var(--coral); }
+.node.anchor.trusted { background: var(--coral-wash); border-color: var(--coral-line); }
+.node.anchor.safe { background: var(--sea-wash); border-color: var(--sea-line); } .node.anchor.safe .ico { color: var(--sea); }
+.link { flex: 0 0 22px; align-self: center; height: 1.5px; background: var(--coral-line); }
+.link.broken { background: repeating-linear-gradient(90deg, var(--sea) 0 4px, transparent 4px 8px); }
+.route-result { margin-top: 8px; font-size: 13px; font-weight: 600; }
+.route-result.trusted { color: var(--coral); } .route-result.safe { color: var(--sea); }
+.fix { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line-soft); }
+.fix h5 { margin: 0 0 6px; font-size: 14px; font-weight: 600; }
+.fix .step { margin-top: 8px; font-size: 13.5px; color: var(--ink-2); }
+.patched { margin-top: 10px; font-size: 13px; color: var(--ink-2); }
+.sources { margin-top: 12px; font-size: 12.5px; color: var(--ink-3); overflow-wrap: anywhere; }
+.note { margin-top: 16px; padding: 12px 14px; border-radius: 12px; background: var(--porcelain); border: 1px solid var(--line); font-size: 13px; color: var(--ink-2); }
+.sheet-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 26px; border-top: 1px solid var(--line-soft); background: #FBFCFE; flex-wrap: wrap; }
 
-.chain { margin: 18px 0 8px; display: grid; gap: 14px; }
-.route { background: var(--paper); border: 1px solid var(--rule-soft); border-radius: 10px; padding: 14px 14px 12px; }
-.route-cap { font-size: 13px; color: var(--steel); margin-bottom: 10px; }
-.links { display: flex; align-items: stretch; flex-wrap: wrap; gap: 0; }
-.node { flex: 1 1 120px; min-width: 110px; border: 1.5px solid var(--rule); border-radius: 9px; padding: 8px 10px; background: var(--sheet); font-size: 13px; line-height: 1.3; }
-.node b { display: block; font-size: 13px; }
-.node small { color: var(--steel); }
-.node.bad { border-color: var(--red); }
-.node.anchor.trusted { background: var(--red-wash); border-color: var(--red); }
-.node.anchor.safe { background: var(--green-wash); border-color: var(--green); }
-.link { flex: 0 0 26px; align-self: center; height: 0; border-top: 2.5px solid var(--red); position: relative; }
-.link.broken { border-top: 2.5px dashed var(--green); }
-.link.broken::after { content: ""; position: absolute; left: 9px; top: -9px; width: 2.5px; height: 16px; background: var(--green); transform: rotate(25deg); }
-.route-result { margin-top: 10px; font-size: 13.5px; font-weight: 600; }
-.route-result.trusted { color: var(--red); } .route-result.safe { color: var(--green); }
+/* scan dialog */
+.dlg { padding: 24px 26px 8px; overflow-y: auto; }
+.dlg h2 { font-size: 22px; letter-spacing: -0.02em; }
+.dlg > p { margin-top: 6px; color: var(--ink-2); font-size: 13.5px; }
+.field { margin-top: 18px; }
+.field .title { display: block; font-weight: 600; font-size: 14px; margin-bottom: 8px; }
+.field textarea { width: 100%; min-height: 64px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--porcelain); font-family: var(--mono); font-size: 12.5px; resize: vertical; }
+.field textarea:focus { outline: none; border-color: var(--cobalt); box-shadow: 0 0 0 3px rgba(54, 95, 229, .14); background: #fff; }
+.check { display: flex; gap: 12px; align-items: flex-start; padding: 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--porcelain); cursor: pointer; }
+.check input { margin-top: 3px; accent-color: var(--cobalt); width: 16px; height: 16px; }
+.images { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.images label { display: inline-flex; gap: 8px; align-items: center; padding: 6px 10px; border-radius: 10px; border: 1px solid var(--line); font-family: var(--mono); font-size: 12px; cursor: pointer; background: #fff; }
+.images input { accent-color: var(--cobalt); }
+.error { margin-top: 14px; color: var(--coral); font-weight: 600; font-size: 13.5px; }
+.dlg-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 26px 20px; border-top: 1px solid var(--line-soft); margin-top: 18px; background: #FBFCFE; }
 
-.empty { margin: 32px 0; max-width: 640px; }
-.empty h1 { font-size: clamp(26px, 3.6vw, 38px); letter-spacing: -0.02em; line-height: 1.1; margin: 0 0 12px; }
-.empty p { color: var(--steel); }
-details.skipped { margin-top: 36px; font-size: 14px; color: var(--steel); }
-details.skipped li { margin: 4px 0; word-break: break-all; }
+/* ---------- more checks: browser test, files, story ---------- */
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+.probe-head { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+.probe-result { margin-top: 16px; font-weight: 600; font-size: 15px; min-height: 1px; }
+.probe-result.bad { color: var(--coral); } .probe-result.good { color: var(--sea); }
+.probe-advice { margin-top: 6px; color: var(--ink-2); font-size: 13.5px; }
+.lanes { display: grid; gap: 14px; margin-top: 18px; }
+.lane-cap { font-size: 12.5px; color: var(--ink-2); margin-bottom: 8px; }
+.cells { display: grid; grid-template-columns: repeat(auto-fill, minmax(116px, 1fr)); gap: 8px; }
+.cell { padding: 9px 11px; border-radius: 11px; border: 1px solid var(--line); background: var(--porcelain); font-size: 12px; transition: background .25s, border-color .25s; }
+.cell b { display: block; font-weight: 600; } .cell span { color: var(--ink-3); }
+.cell.testing { border-color: var(--cobalt-soft); background: var(--cobalt-wash); } .cell.testing span { color: var(--cobalt-deep); }
+.cell.connected { background: var(--coral-wash); border-color: var(--coral-line); } .cell.connected span { color: var(--coral); font-weight: 600; }
+.cell.refused { background: var(--sea-wash); border-color: var(--sea-line); } .cell.refused span { color: var(--sea); font-weight: 600; }
+.probe-foot { margin-top: 16px; font-size: 12.5px; color: var(--ink-3); }
+.drop { margin-top: 14px; padding: 26px 18px; border-radius: 16px; border: 1.5px dashed var(--line-strong); background: var(--porcelain); text-align: center; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 6px; transition: border-color .16s, background .16s; }
+.drop:hover, .drop.over { border-color: var(--cobalt); background: var(--cobalt-wash); }
+.drop b { font-size: 15px; } .drop span { color: var(--ink-3); font-size: 13px; }
+.kinds { margin: 14px 0 0; padding-left: 18px; font-size: 13px; color: var(--ink-2); display: grid; gap: 6px; }
+.steps { list-style: none; counter-reset: s; margin: 16px 0 0; padding: 0; display: grid; gap: 18px; }
+.steps > li { counter-increment: s; display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 12px; }
+.steps > li::before { content: counter(s); width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--cobalt-wash); color: var(--cobalt-deep); font-weight: 700; font-size: 13px; }
+.steps h4 { font-size: 14.5px; } .steps p { margin-top: 6px; font-size: 13px; color: var(--ink-2); }
+.os-tabs { display: inline-flex; gap: 4px; padding: 3px; border-radius: 10px; background: var(--porcelain); border: 1px solid var(--line); margin-top: 8px; }
+.os-tabs button { border: 0; background: none; padding: 5px 10px; border-radius: 8px; font-size: 12.5px; font-weight: 600; color: var(--ink-2); cursor: pointer; }
+.os-tabs button[aria-selected="true"] { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(32, 52, 83, .12); }
+.timeline { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 16px; border-left: 2px solid var(--line); }
+.timeline li { position: relative; padding-left: 18px; }
+.timeline li::before { content: ""; position: absolute; left: -6px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: #fff; border: 2px solid var(--cobalt); }
+.timeline li.now::before { background: var(--coral); border-color: var(--coral); }
+.timeline time { font-size: 12.5px; font-weight: 700; color: var(--ink-3); }
+.timeline p { margin-top: 2px; font-size: 13.5px; color: var(--ink-2); }
+.whos { margin: 14px 0 0; display: grid; gap: 14px; }
+.whos dt { font-weight: 600; font-size: 14px; } .whos dd { margin: 3px 0 0; color: var(--ink-2); font-size: 13.5px; }
 
-/* Dialog */
-dialog { border: 1px solid var(--rule); border-radius: 14px; padding: 0; width: min(620px, calc(100vw - 32px)); background: var(--sheet); color: var(--ink); }
-dialog[open] { max-height: calc(100dvh - 32px); display: flex; }
-dialog form { display: flex; flex-direction: column; min-height: 0; width: 100%; }
-dialog .dlg { overflow: auto; min-height: 0; }
-dialog::backdrop { background: rgba(19, 26, 34, .45); }
-.dlg { padding: 22px 24px; }
-.dlg h2 { margin: 0 0 4px; font-size: 20px; }
-.dlg > p { margin: 0 0 16px; color: var(--steel); font-size: 14px; }
-.field { margin: 16px 0; }
-.field label.title { display: block; font-weight: 650; margin-bottom: 6px; }
-.field .hint { font-size: 13px; color: var(--steel); margin-top: 4px; }
-.check { display: flex; gap: 10px; align-items: flex-start; font-size: 14.5px; }
-.check input { margin-top: 4px; }
-.images { margin-bottom: 8px; max-height: 180px; overflow: auto; border: 1px solid var(--rule-soft); border-radius: 8px; padding: 6px 10px; background: var(--paper); }
-.images label { display: flex; gap: 8px; align-items: center; padding: 3px 0; font-family: var(--mono); font-size: 12.5px; word-break: break-all; }
-textarea { width: 100%; min-height: 64px; background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 10px; font-family: var(--mono); font-size: 13px; }
-.dlg-actions { display: flex; gap: 10px; justify-content: flex-end; padding: 14px 24px; border-top: 1px solid var(--rule-soft); }
-.error { color: var(--red); font-size: 14px; margin: 8px 0 0; }
-.update { background: var(--blue-wash); color: var(--ink); font-size: 14px; }
-.update > div { max-width: 1200px; margin: 0 auto; padding: 8px 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-.update a { color: var(--blue); font-weight: 650; }
-.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 8px;
-  font-size: 14px; z-index: 40; max-width: calc(100vw - 32px); box-shadow: 0 8px 24px -12px rgba(0,0,0,.5); }
+/* ---------- history, settings, planned ---------- */
+.compare { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.compare > div { padding: 24px 28px; border-left: 1px solid var(--line-soft); }
+.compare > div:first-child { border-left: 0; }
+.compare small { display: block; font-size: 12.5px; color: var(--ink-3); }
+.compare b { display: block; font-size: 32px; font-weight: 600; letter-spacing: -0.03em; margin: 8px 0 4px; }
+.compare .good { color: var(--sea); } .compare .bad { color: var(--coral); }
+.compare span { font-size: 12.5px; color: var(--ink-2); }
+.activity .item { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto 18px; gap: 16px; align-items: center; width: 100%; padding: 16px 22px; border: 0;
+  border-top: 1px solid var(--line-soft); background: none; text-align: left; cursor: pointer; }
+.activity .item:first-of-type { border-top: 0; }
+.activity .item:hover { background: #FAFBFF; }
+.activity .item[aria-current="true"] { background: var(--cobalt-wash); }
+.activity .pip { width: 12px; height: 12px; border-radius: 50%; background: var(--cobalt-soft); box-shadow: inset 0 0 0 3px #fff, 0 0 0 1px var(--cobalt-soft); }
+.activity .item b { font-weight: 600; } .activity .item small { display: block; color: var(--ink-3); font-size: 12.5px; margin-top: 2px; }
+.settings { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 22px; align-items: start; }
+.setgroup + .setgroup { margin-top: 10px; }
+.setgroup h2 { font-size: 17px; padding: 22px 26px 4px; }
+.setrow { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 16px 26px; border-top: 1px solid var(--line-soft); }
+.setgroup h2 + .setrow { border-top: 0; }
+.setrow b { display: block; font-weight: 600; } .setrow small { display: block; color: var(--ink-3); font-size: 12.8px; margin-top: 2px; }
+.switch { position: relative; width: 42px; height: 24px; flex: none; }
+.switch input { position: absolute; inset: 0; opacity: 0; cursor: pointer; margin: 0; }
+.switch span { position: absolute; inset: 0; border-radius: 12px; background: #D3DBEA; transition: background .2s var(--ease-std); pointer-events: none; }
+.switch span::after { content: ""; position: absolute; left: 3px; top: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(32, 52, 83, .25);
+  transition: transform .32s var(--spring); }
+.switch input:checked + span { background: var(--cobalt); }
+.switch input:checked + span::after { transform: translateX(18px); }
+.switch input:focus-visible + span { outline: 2px solid var(--cobalt); outline-offset: 2px; }
+.planned { max-width: 760px; }
+.planned ul { margin: 14px 0 0; padding-left: 18px; color: var(--ink-2); display: grid; gap: 8px; font-size: 14px; }
 
+/* ---------- calm motion ---------- */
+html.calm *, html.calm *::before, html.calm *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; transition-delay: 0s !important; }
+html.calm .attention { transform: none; }
 @media (prefers-reduced-motion: reduce) {
-  .progress.on::after { animation: none; width: 100%; opacity: .5; }
-  .panel, .cell, .drop { transition: none; }
-  .cell.testing span::after { animation: none; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; transition-delay: 0s !important; }
+  .attention { transform: none; }
 }
-@media (max-width: 900px) {
-  .ways, .story { grid-template-columns: minmax(0, 1fr); }
-  .story { gap: 28px; }
-  .cells { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+/* ---------- narrow screens ---------- */
+@media (max-width: 1100px) {
+  .ov, .settings { grid-template-columns: minmax(0, 1fr); }
+  .aside-stack { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
 }
-@media (max-width: 720px) {
-  .bar-in { padding: 10px 16px; flex-wrap: wrap; }
-  .history { order: 3; width: 100%; }
-  .history select { max-width: none; flex: 1; }
-  main { padding: 28px 16px 56px; }
-  .foot-in { padding: 20px 16px 32px; }
-  .probe, .way { padding: 18px 16px; border-radius: 12px; }
-  .probe-head .btn { width: 100%; }
-  .section { margin-top: 44px; }
-  .row { grid-template-columns: 12px minmax(0, 1fr) auto; }
+@media (max-width: 860px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .side { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; padding: 12px 16px; border-right: 0; border-bottom: 1px solid var(--line); gap: 10px; }
+  .side .ws, .side .nav-cap, .side-foot { display: none; }
+  .nav { flex-direction: row; overflow-x: auto; flex: 1 1 100%; min-width: 0; scrollbar-width: none; }
+  .nav button { width: auto; white-space: nowrap; padding: 8px 10px; }
+  .top { padding: 0 16px; height: 52px; }
+  main { padding: 24px 16px 40px; }
+  .statusbar { padding: 10px 16px; } .statusbar .mid { margin: 0; }
+  .two, .compare { grid-template-columns: minmax(0, 1fr); }
+  .compare > div { border-left: 0; border-top: 1px solid var(--line-soft); }
+  .row { grid-template-columns: 34px minmax(0, 1fr) auto 16px; padding: 14px 16px; }
   .row .what { display: none; }
-  .link { flex-basis: 100%; height: 14px; border-top: 0; border-left: 2.5px solid var(--red); margin-left: 18px; }
-  .link.broken { border-left: 2.5px dashed var(--green); border-top: 0; }
-  .link.broken::after { left: -9px; top: 3px; transform: rotate(65deg); }
-  .node { flex-basis: 100%; }
-  .panel-head, .panel-body { padding-left: 16px; padding-right: 16px; }
-}
-@media (max-width: 420px) {
-  .cells { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  #chooseBtn { display: none; }
-}
-@media print {
-  .bar, .panel, .report-actions, .tools, footer { display: none !important; }
-  body { background: #fff; color: #000; }
+  .stage { height: 380px; }
+  .callout { display: none; }
+  .stage-empty { position: static; max-width: none; margin: 0 0 8px; }
+  .stage.is-empty .rig { left: 50%; }
+  .stage-hint { display: none; }
+  .update > div { margin: 12px 16px 0; }
 }
 </style>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<header class="bar">
-  <div class="bar-in">
-    <button class="brand" id="brand" type="button" aria-label="TrustWatch start page">
-      <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="11" width="13" height="10" rx="5" fill="none" stroke="currentColor" stroke-width="2.6"/><rect x="16" y="11" width="13" height="10" rx="5" fill="none" stroke="var(--red)" stroke-width="2.6"/></svg>
-      TrustWatch
-    </button>
-    <label class="history" id="historyWrap" hidden><span>Report</span> <select id="history" aria-label="Choose a report"></select></label>
-    <button class="btn" id="chooseBtn" type="button" hidden>Choose what to scan</button>
-    <button class="btn primary" id="scanBtn" type="button" hidden>Scan this computer</button>
+<div class="app">
+  <aside class="side" id="side" aria-label="TrustWatch"></aside>
+  <div class="work">
+    <header class="top">
+      <nav class="crumbs" id="crumbs" aria-label="You are here"></nav>
+      <div class="top-right" id="topRight"></div>
+      <div class="progress" id="progress"></div>
+    </header>
+    <div class="update" id="update" role="status" hidden></div>
+    <main id="main" tabindex="-1"></main>
+    <footer class="statusbar" id="statusbar"></footer>
   </div>
-  <div class="update" id="update" role="status" hidden></div>
-  <div class="progress" id="progress"></div>
-  <div class="sr" id="live" role="status" aria-live="polite"></div>
-</header>
-
-<main id="main" tabindex="-1"></main>
-
-<footer>
-  <div class="foot-in" id="foot"></div>
-</footer>
-
-<aside class="panel" id="panel" aria-hidden="true" aria-labelledby="panelTitle" role="region"></aside>
-
+</div>
+<div class="sr" id="live" role="status" aria-live="polite"></div>
 <input type="file" id="fileInput" hidden>
 
+<dialog id="evidence" aria-labelledby="evTitle"></dialog>
+
 <dialog id="dialog" aria-labelledby="dlgTitle">
-  <form method="dialog" id="scanForm">
+  <form method="dialog" id="scanForm" class="sheet-in">
     <div class="dlg">
       <h2 id="dlgTitle">Choose what to scan</h2>
       <p>TrustWatch only reads certificate lists and asks the system to check the test chains. It never changes anything.</p>
@@ -378,8 +514,26 @@ const MEANING = {
   info: "Worth knowing, but no action needed.",
   ok: "Rejects every compromised test chain. Nothing to do.",
 };
-const STORE_KEY = "trustwatch.reports";
-const state = { status: null, scan: null, source: null, filter: "all", query: "", selected: null, serverScans: [], local: false };
+/* Tones are what the colours mean: risk (coral), review (amber), clear (cool metal), empty (not checked). */
+const TONE = { critical: "risk", high: "risk", medium: "review", low: "review", info: "clear", ok: "clear" };
+const RANK = { empty: 0, clear: 1, review: 2, risk: 3 };
+const LAYERS = [
+  { key: "system", name: "System trust", icon: "monitor",
+    blurb: "The operating system's own certificate lists and its built-in check. curl, git and most system tools rely on these." },
+  { key: "python", name: "Python & pip", icon: "code",
+    blurb: "Python's certifi package and the copy pip carries inside itself. Every environment has its own copy." },
+  { key: "runtimes", name: "Node & Java", icon: "cpu",
+    blurb: "Node.js, Bun, Deno and Java keep certificate lists compiled in or shipped beside them, separate from the system." },
+  { key: "apps", name: "Apps & programs", icon: "app",
+    blurb: "Desktop apps built on Electron, such as Slack or VS Code, and programs with a list built in, such as Go or Rust services." },
+  { key: "images", name: "Container images", icon: "box",
+    blurb: "Certificate lists baked into Docker images. Each image keeps its copy until it is rebuilt." },
+];
+const SYSTEM_KINDS = new Set(["os-verifier", "windows-root", "os-bundle", "homebrew"]);
+const VIEWS = { overview: "Overview", findings: "Findings", history: "History", settings: "Settings", investigator: "Investigator", connections: "Connections" };
+const STORE_KEY = "trustwatch.reports", PREFS_KEY = "trustwatch.prefs";
+const state = { status: null, scan: null, source: null, filter: "all", layerFilter: null, query: "", layer: null, serverScans: [], local: false,
+  view: "overview", busy: null, explode: 0.78, rx: 58, rz: -40, opened: false, prefs: { calm: false, flat: false } };
 const $ = (id) => document.getElementById(id);
 
 function h(tag, attrs = {}, ...kids) {
@@ -392,6 +546,39 @@ function h(tag, attrs = {}, ...kids) {
   }
   for (const kid of kids.flat(Infinity)) if (kid != null && kid !== false) el.append(kid.nodeType ? kid : String(kid));
   return el;
+}
+
+const ICONS = {
+  layers: '<path d="m12 3 9 4.8-9 4.8-9-4.8L12 3Z"/><path d="m3 12.2 9 4.8 9-4.8"/><path d="m3 16.4 9 4.8 9-4.8"/>',
+  shield: '<path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.2 7.5 9.5 4.3-1.3 7.5-4.9 7.5-9.5V6L12 3Z"/><path d="M12 8v5M12 16.2v.01"/>',
+  history: '<path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1L3.5 8.5"/><path d="M3.5 3.5v5h5"/><path d="M12 7.5V12l3 2"/>',
+  settings: '<path d="M4 7h9M18 7h2M4 17h3M12 17h8"/><circle cx="15.5" cy="7" r="2.3"/><circle cx="9.5" cy="17" r="2.3"/>',
+  spark: '<path d="M12 3c.6 4.2 2.8 6.4 7 7-4.2.6-6.4 2.8-7 7-.6-4.2-2.8-6.4-7-7 4.2-.6 6.4-2.8 7-7Z"/><path d="M19 15.5c.2 1.4.9 2.1 2.3 2.3-1.4.2-2.1.9-2.3 2.3-.2-1.4-.9-2.1-2.3-2.3 1.4-.2 2.1-.9 2.3-2.3Z"/>',
+  link: '<path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1"/>',
+  scan: '<path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M7 12h10"/>',
+  download: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+  lock: '<rect x="5" y="10.5" width="14" height="10" rx="2.2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/><path d="M12 14.5v2.2"/>',
+  chev: '<path d="m9 6 6 6-6 6"/>',
+  arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  copy: '<rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2.2"/><path d="M15.5 8.5V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7.5a2 2 0 0 0 2 2h2.5"/>',
+  close: '<path d="M6 6l12 12M18 6 6 18"/>',
+  monitor: '<rect x="3" y="4" width="18" height="12.5" rx="2.2"/><path d="M8.5 20h7M12 16.5V20"/>',
+  file: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5"/>',
+  code: '<path d="m9 8-4 4 4 4M15 8l4 4-4 4"/>',
+  cpu: '<rect x="6.5" y="6.5" width="11" height="11" rx="2"/><path d="M9.5 3v3.5M14.5 3v3.5M9.5 17.5V21M14.5 17.5V21M3 9.5h3.5M3 14.5h3.5M17.5 9.5H21M17.5 14.5H21"/>',
+  box: '<path d="M21 8 12 3 3 8v8l9 5 9-5V8Z"/><path d="m3 8 9 5 9-5M12 13v8"/>',
+  app: '<rect x="3" y="4" width="18" height="16" rx="2.4"/><path d="M3 9h18M6.5 6.6h.01M9 6.6h.01"/>',
+  check: '<path d="m5 12.5 4.5 4.5L19 7"/>',
+  alert: '<path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.2 7.5 9.5 4.3-1.3 7.5-4.9 7.5-9.5V6L12 3Z"/><path d="M12 8v5M12 16.2v.01"/>',
+  reset: '<path d="M4 12a8 8 0 1 0 2.4-5.7L4 8.5"/><path d="M4 4v4.5h4.5"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
+  seal: '<circle cx="12" cy="10" r="6"/><path d="m9 15.5-1.5 5.5 4.5-2.5 4.5 2.5-1.5-5.5"/>',
+  open: '<path d="M4 6h16M4 12h16M4 18h10"/>',
+};
+function icon(name, cls = "") {
+  const s = h("span", { class: `ico ${cls}`, "aria-hidden": "true" });
+  s.innerHTML = `<svg viewBox="0 0 24 24">${ICONS[name] || ""}</svg>`;  // fixed strings from ICONS only
+  return s;
 }
 
 /* Reports can come from a file someone else made, so only plain web links become clickable. */
@@ -433,16 +620,29 @@ function refDate(raw) {
 }
 const plural = (n, one, many) => `${n} ${n === 1 ? one : (many || one + "s")}`;
 const eventName = (ev) => ev ? ev.title.replace(/ intermediate CA key compromise$/i, "") : "known";
+const atRisk = (sum) => (sum?.critical || 0) + (sum?.high || 0);
 
 async function copy(text) {
   try { await navigator.clipboard.writeText(text); toast("Copied"); }
   catch { toast("Copy didn't work here. Select the text and copy it instead."); }
 }
 function cmd(text) {
-  return h("div", { class: "cmd" }, text, h("button", { type: "button", onclick: () => copy(text), "aria-label": "Copy command" }, "Copy"));
+  return h("div", { class: "cmd" }, h("span", {}, text), h("button", { type: "button", onclick: () => copy(text), "aria-label": "Copy command", title: "Copy" }, icon("copy")));
 }
 
-/* ---------- reports kept in this browser ---------- */
+/* ---------- preferences and reports kept in this browser ---------- */
+
+function loadPrefs() {
+  try { Object.assign(state.prefs, JSON.parse(localStorage.getItem(PREFS_KEY) || "{}")); } catch { /* defaults */ }
+  applyPrefs();
+}
+function setPref(k, v) {
+  state.prefs[k] = v;
+  try { localStorage.setItem(PREFS_KEY, JSON.stringify(state.prefs)); } catch { /* kept for this visit only */ }
+  applyPrefs();
+}
+function applyPrefs() { document.documentElement.classList.toggle("calm", !!state.prefs.calm); }
+const calm = () => state.prefs.calm || matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 function savedReports() {
   try { return JSON.parse(localStorage.getItem(STORE_KEY) || "[]"); } catch { return []; }
@@ -463,46 +663,487 @@ function validReport(d) {
     typeof d.events === "object" && d.stores.every(s => s && typeof s.name === "string" && ORDER.includes(s.verdict) && Array.isArray(s.findings));
 }
 
-/* ---------- start page ---------- */
+/* ---------- shell: sidebar, top bar, status bar ---------- */
+
+function renderSide() {
+  const s = state.status || {};
+  const container = state.local && s.host_scan === false;
+  const ws = state.local
+    ? (container ? ["box", "Images and folders", "Docker dashboard"] : ["monitor", "This computer", "Local workspace"])
+    : ["globe", "Public website", "Nothing is stored"];
+  const n = state.scan ? atRisk(state.scan.summary) : 0;
+  const item = (key, ico, extra) => h("button", { type: "button", "aria-current": state.view === key ? "page" : null, onclick: () => navigate(key) },
+    icon(ico), VIEWS[key], extra);
+  $("side").replaceChildren(
+    h("button", { class: "brand", type: "button", onclick: () => navigate("overview"), "aria-label": "TrustWatch overview" },
+      h("img", { src: "/assets/owl-64.png", alt: "" }), "TrustWatch", h("span", { class: "pulse", "aria-hidden": "true" })),
+    h("button", { class: "ws", type: "button", onclick: () => navigate("overview") },
+      h("span", { class: "tile" }, icon(ws[0])), h("span", {}, h("b", {}, ws[1]), h("small", {}, ws[2])), icon("chev")),
+    h("div", { class: "nav-cap" }, "Workspace"),
+    h("nav", { class: "nav", "aria-label": "Sections" },
+      item("overview", "layers"),
+      item("findings", "shield", n ? h("span", { class: "badge", title: `${n} at risk` }, n) : null),
+      item("history", "history"),
+      item("investigator", "spark", h("span", { class: "chip" }, "Planned")),
+      item("connections", "link", h("span", { class: "chip" }, "Planned")),
+      item("settings", "settings")),
+    h("div", { class: "side-foot" },
+      h("div", { class: "promise" }, icon("lock"), h("span", {}, state.local ? "On your machine. Read-only by design." : "Read-only by design. Nothing is stored.")),
+      h("div", { class: "who-card" }, h("img", { src: "/assets/owl-64.png", alt: "" }),
+        h("span", {}, h("b", {}, "Open source, non-profit"), "For public, educational and personal use"))));
+}
+
+function renderTop() {
+  $("crumbs").replaceChildren(h("span", {}, "TrustWatch"), icon("chev"), h("b", {}, VIEWS[state.view]));
+  const right = [];
+  if (state.scan) right.push(h("span", { class: "chip", title: "Results come from this scan" }, state.source?.kind === "server" ? `Scan ${when(state.scan.finished)}` : state.source?.label || "Report"));
+  right.push(h("span", { class: "chip" }, icon("lock"), "Read-only"));
+  $("topRight").replaceChildren(...right);
+}
+
+function renderStatusbar() {
+  const s = state.status || {};
+  const ref = refDate(s.reference?.mozilla_roots_as_of);
+  $("statusbar").replaceChildren(
+    h("span", { class: "live" }, state.local ? (state.busy ? "Scanning on this computer" : "Running on this computer") : "Public website"),
+    h("span", { class: "mid" }, `TrustWatch ${s.version || ""}`, ref ? ` · Mozilla's trusted list as of ${ref}` : ""),
+    h("span", {}, extLink("https://github.com/Naveen-Sai-Ganadi/trustwatch/blob/main/LICENSE", "MIT License"), " · free for public, educational and personal use · no warranty"));
+}
+
+function renderUpdate() {
+  const u = state.status?.app?.update, box = $("update");
+  if (!u || sessionStorageGet("trustwatch.update-dismissed") === u.version) { box.hidden = true; return; }
+  box.replaceChildren(h("div", {}, `TrustWatch ${u.version} is available.`, extLink(u.url, "Download"),
+    h("button", { class: "linkish", type: "button", onclick: () => { sessionStorageSet("trustwatch.update-dismissed", u.version); box.hidden = true; } }, "Not now")));
+  box.hidden = false;
+}
+function sessionStorageGet(k) { try { return sessionStorage.getItem(k); } catch { return null; } }
+function sessionStorageSet(k, v) { try { sessionStorage.setItem(k, v); } catch {} }
+
+/* ---------- navigation ---------- */
+
+function navigate(view, push = true) {
+  if (!VIEWS[view]) view = "overview";
+  state.view = view;
+  for (const d of [$("evidence"), $("dialog")]) if (d.open) d.close();
+  if (push && location.hash !== `#${view}`) history.pushState(null, "", `#${view}`);
+  render();
+  window.scrollTo(0, 0);
+  $("main").focus({ preventScroll: true });
+}
+function render() {
+  renderSide(); renderTop(); renderStatusbar();
+  const pages = { overview: renderOverview, findings: renderFindings, history: renderHistory, settings: renderSettings,
+    investigator: () => renderPlanned("investigator"), connections: () => renderPlanned("connections") };
+  const page = h("div", { class: "page enter" }, pages[state.view]());
+  $("main").replaceChildren(page);
+  if (state.view === "overview") mountStage();
+}
+window.addEventListener("popstate", () => navigate((location.hash || "#overview").slice(1).replace("report", "overview"), false));
+
+function showReport(scan, source) {
+  state.scan = scan; state.source = source; state.filter = "all"; state.layerFilter = null; state.query = ""; state.layer = null;
+  navigate("overview");
+  if (scan.stores.length === 1) openStore(scan.stores[0].id);  // one file checked: go straight to its evidence and fix
+}
+
+/* ---------- the trust stack ---------- */
+
+function layerOf(s) {
+  if (String(s.origin).startsWith("image:")) return "images";
+  if (SYSTEM_KINDS.has(s.kind)) return "system";
+  if (s.kind === "certifi" || s.kind === "pip-vendored") return "python";
+  if (s.kind === "node" || s.kind === "java" || (s.kind === "embedded" && ["node", "bun", "deno"].includes(s.platform))) return "runtimes";
+  return "apps";
+}
+function layersFor(scan) {
+  const withImages = scan && (scan.stores.some(s => layerOf(s) === "images") || (scan.targets?.images || []).length);
+  return LAYERS.filter(L => L.key !== "images" || withImages).map(L => {
+    const stores = scan ? scan.stores.filter(s => layerOf(s) === L.key) : [];
+    const tone = stores.reduce((t, s) => RANK[TONE[s.verdict]] > RANK[t] ? TONE[s.verdict] : t, stores.length ? "clear" : "empty");
+    const risky = stores.filter(s => TONE[s.verdict] === "risk").length, review = stores.filter(s => TONE[s.verdict] === "review").length;
+    return { ...L, stores, tone, risky, review };
+  });
+}
+function layerStatus(L) {
+  if (!state.scan) return "Not checked yet";
+  if (!L.stores.length) return "None found";
+  if (L.risky) return `${L.risky} at risk`;
+  if (L.review) return `${L.review} to review`;
+  return "No known findings";
+}
+function overallTone(scan) {
+  if (!scan) return "empty";
+  return atRisk(scan.summary) ? "risk" : (scan.summary.medium || scan.summary.low) ? "review" : "clear";
+}
+
+function renderStack() {
+  const scan = state.scan, layers = layersFor(scan);
+  const stage = h("div", { class: "stage", id: "stage", role: "group", "aria-label": "Trust stack. Use the layer buttons below to inspect a layer." });
+  if (state.prefs.flat) {
+    stage.style.height = "auto"; stage.style.cursor = "default";
+    stage.append(h("div", { class: "flat-stack" }, layers.map(L => h("button", { type: "button", class: `${L.tone}${state.layer === L.key ? " sel" : ""}`, onclick: () => selectLayer(L.key) },
+      h("span", { class: "bar" }), icon(L.icon), h("b", {}, L.name), h("small", {}, layerStatus(L))))));
+    return stage;
+  }
+  const rig = h("div", { class: "rig", id: "rig", style: "--x:0" }, h("div", { class: "floor" }), h("div", { class: "shade" }));
+  const labels = h("div", { class: "labels closed", id: "labels", "aria-hidden": "true" });
+  const plate = (L, i, cap) => {
+    labels.append(h("span", { class: `callout ${cap ? overallTone(scan) : L.tone}`, "data-layer": L.key }, L.name, h("small", {}, cap ? capStatus() : layerStatus(L))));
+    return h("div", { class: `plate tone-${L.tone}${cap ? " cap" : ""}`, style: `--i:${i}`, "data-layer": L.key,
+        onclick: () => { if (!stage.dataset.moved) cap ? selectLayer(null) : selectLayer(L.key); } },
+      h("div", { class: "face" }, cap ? h("img", { src: "/assets/owl-256.png", alt: "" }) : null));
+  };
+  layers.forEach((L, i) => rig.append(plate(L, i)));
+  rig.append(plate({ key: "picture", name: "Your trust picture", tone: overallTone(scan) }, layers.length, true));
+  stage.append(h("div", { class: "scene", id: "scene" }, rig), labels);
+  if (state.busy) stage.append(h("div", { class: "stage-phase", id: "stagePhase" }, state.busy));
+  if (!scan && !state.busy) {
+    stage.classList.add("is-empty");
+    stage.append(h("div", { class: "stage-empty" },
+      h("b", {}, state.local ? "Your first scan starts here." : "Open a report to fill in this stack."),
+      h("span", {}, state.local ? "Each layer lights up with what TrustWatch finds on this computer." : "Each layer shows what a scan found, layer by layer.")));
+  }
+  stage.append(h("div", { class: "stage-hint" }, "Drag to turn · select a layer to inspect it"),
+    h("div", { class: "stage-tools" }, h("button", { class: "btn", type: "button", onclick: resetView }, icon("reset"), "Reset view")));
+  return stage;
+}
+function capStatus() {
+  const scan = state.scan;
+  if (!scan) return "Not checked yet";
+  const n = atRisk(scan.summary);
+  return n ? `${n} of ${scan.stores.length} at risk` : `${scan.stores.length} checked`;
+}
+
+function layerChips() {
+  return h("div", { class: "layer-chips", role: "group", "aria-label": "Layers" }, layersFor(state.scan).map(L =>
+    h("button", { type: "button", "aria-pressed": String(state.layer === L.key), "data-layer": L.key, onclick: () => selectLayer(L.key) },
+      h("span", { class: `dot ${L.tone}` }), L.name, state.scan ? h("span", { class: "n" }, L.stores.length) : null)));
+}
+
+function scrubber() {
+  const range = h("input", { type: "range", min: "0", max: "100", value: String(Math.round(state.explode * 100)), "aria-label": "Separate the layers",
+    oninput: (e) => { state.explode = e.target.value / 100; setExplode(true); }, onchange: () => $("stage")?.classList.remove("scrubbing") });
+  const toggle = h("button", { class: "btn", type: "button", onclick: () => { state.explode = state.explode > .4 ? 0 : .78; range.value = String(Math.round(state.explode * 100)); setExplode(false); } },
+    icon("layers"), state.explode > .4 ? "Assemble" : "Open up");
+  return h("div", { class: "scrub" }, toggle, h("span", {}, "Assembled"), range, h("span", {}, "Open"));
+}
+
+function setExplode(scrubbing) {
+  const rig = $("rig"), stage = $("stage");
+  if (!rig) return;
+  stage.classList.toggle("scrubbing", !!scrubbing);
+  rig.style.setProperty("--x", state.explode);
+  $("labels")?.classList.toggle("closed", state.explode < .32);
+  followLabels();
+  const btn = document.querySelector(".scrub .btn");
+  if (btn) btn.replaceChildren(icon("layers"), state.explode > .4 ? "Assemble" : "Open up");
+}
+function setView() {
+  const scene = $("scene"); if (!scene) return;
+  scene.style.setProperty("--rx", `${state.rx}deg`); scene.style.setProperty("--rz", `${state.rz}deg`);
+  const stage = $("stage");
+  scene.style.setProperty("--s", Math.min(1, (stage.clientWidth - 40) / 640).toFixed(3));
+  extrude();
+  followLabels();
+}
+
+/* Thickness: a stack of 1px shadows in each plate's own plane, pointed so that it reads as straight down on screen.
+   For a plane turned by rotateX(rx) rotateZ(rz), that direction is tan(rx) * (sin rz, cos rz) per pixel of thickness. */
+function extrude() {
+  const rad = Math.PI / 180, k = Math.tan(state.rx * rad), dx = k * Math.sin(state.rz * rad), dy = k * Math.cos(state.rz * rad);
+  const layers = (n, color, edge) => Array.from({ length: n }, (_, j) => `${(dx * (j + 1)).toFixed(2)}px ${(dy * (j + 1)).toFixed(2)}px 0 ${j === n - 1 ? edge : color}`);
+  const rig = $("rig");
+  // currentColor is each plate's side colour (set per tone in CSS), so one shadow list serves every plate.
+  if (rig) rig.style.setProperty("--extrude", [...layers(11, "currentColor", "color-mix(in srgb, currentColor 70%, #14233D)"),
+    `${(dx * 16).toFixed(1)}px ${(dy * 16).toFixed(1)}px 20px rgba(32, 52, 83, .16)`].join(", "));
+}
+
+/* Labels live in a flat overlay and follow the right-hand edge of their plate, including while the stack moves. */
+let labelUntil = 0;
+function followLabels() {
+  const start = !labelUntil || performance.now() > labelUntil;
+  labelUntil = performance.now() + 1300;
+  if (!start) return;
+  const step = () => {
+    const stage = $("stage"), box = $("labels");
+    if (!stage || !box) { labelUntil = 0; return; }
+    const sr = stage.getBoundingClientRect();
+    box.querySelectorAll(".callout").forEach(c => {
+      const face = stage.querySelector(`.plate[data-layer="${c.dataset.layer}"] .face`);
+      if (!face) return;
+      const r = face.getBoundingClientRect();
+      const x = Math.min(r.right - sr.left + 24, sr.width - c.offsetWidth - 12);
+      c.style.transform = `translate(${Math.round(x)}px, ${Math.round(r.top - sr.top + r.height * .55 - c.offsetHeight / 2)}px)`;
+    });
+    if (performance.now() < labelUntil) requestAnimationFrame(step); else labelUntil = 0;
+  };
+  requestAnimationFrame(step);
+}
+function resetView() { state.rx = 58; state.rz = -40; setView(); }
+
+/* Mount the stage after it is in the page: first visit opens the stack from assembled, then orbit by dragging. */
+function mountStage() {
+  const stage = $("stage"), rig = $("rig");
+  if (!stage || !rig) return;
+  setView();
+  if (!state.opened && !calm()) {
+    state.opened = true;
+    requestAnimationFrame(() => requestAnimationFrame(() => setExplode(false)));
+  } else { state.opened = true; stage.classList.add("scrubbing"); setExplode(true); requestAnimationFrame(() => stage.classList.remove("scrubbing")); }
+  if (state.busy) rig.classList.add("scanning");
+  let start = null;
+  stage.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0 || e.target.closest("button")) return;
+    start = { x: e.clientX, y: e.clientY, rx: state.rx, rz: state.rz };
+    delete stage.dataset.moved;
+  });
+  stage.addEventListener("pointermove", (e) => {
+    if (!start) return;
+    const dx = e.clientX - start.x, dy = e.clientY - start.y;
+    if (!stage.dataset.moved && Math.hypot(dx, dy) < 5) return;
+    if (!stage.dataset.moved) { stage.dataset.moved = "1"; stage.classList.add("dragging"); stage.setPointerCapture(e.pointerId); }
+    state.rz = Math.max(-68, Math.min(-14, start.rz + dx * 0.25));
+    state.rx = Math.max(38, Math.min(72, start.rx - dy * 0.18));
+    setView();
+  });
+  const end = () => { if (!start) return; start = null; stage.classList.remove("dragging"); setTimeout(() => delete stage.dataset.moved, 0); };
+  stage.addEventListener("pointerup", end); stage.addEventListener("pointercancel", end);
+  attachTilt(document.querySelector(".attention"));
+}
+window.addEventListener("resize", () => setView());
+
+function selectLayer(key) {
+  state.layer = state.layer === key ? null : key;
+  document.querySelectorAll(".plate[data-layer]").forEach(p => {
+    const k = p.dataset.layer, cap = p.classList.contains("cap");
+    p.classList.toggle("sel", !cap && k === state.layer);
+    p.classList.toggle("dim", !!state.layer && k !== state.layer && !cap);
+  });
+  document.querySelectorAll(".callout[data-layer]").forEach(c => c.classList.toggle("dim", !!state.layer && c.dataset.layer !== state.layer && c.dataset.layer !== "picture"));
+  document.querySelectorAll(".layer-chips button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.layer === state.layer)));
+  document.querySelectorAll(".flat-stack button").forEach((b, i) => b.classList.toggle("sel", layersFor(state.scan)[i]?.key === state.layer));
+  const aside = $("asideTop");
+  if (aside) { aside.replaceWith(asideTop()); attachTilt(document.querySelector(".attention")); }
+  if (state.layer) announce(`${LAYERS.find(L => L.key === state.layer)?.name} selected`);
+}
+
+/* Small physical feedback: the attention card leans up to 2 degrees toward the pointer, with a soft glare. */
+function attachTilt(el) {
+  if (!el || calm()) return;
+  el.addEventListener("pointermove", (e) => {
+    const r = el.getBoundingClientRect(), px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+    el.style.setProperty("--tx", `${((px - .5) * 4).toFixed(2)}deg`); el.style.setProperty("--ty", `${((.5 - py) * 4).toFixed(2)}deg`);
+    el.style.setProperty("--gx", `${(px * 100).toFixed(0)}%`); el.style.setProperty("--gy", `${(py * 100).toFixed(0)}%`);
+  });
+  el.addEventListener("pointerleave", () => { el.style.setProperty("--tx", "0deg"); el.style.setProperty("--ty", "0deg"); });
+}
+
+/* ---------- overview ---------- */
 
 function primaryEvent() { return state.status?.events?.[0]; }
-
-function renderHome() {
-  const ev = primaryEvent();
-  const nodes = [];
-  nodes.push(h("section", { class: "hero" },
-    h("h1", {}, ev ? `Find everything that still trusts the leaked ${eventName(ev)} certificates.` : "Find everything that still trusts a compromised certificate authority."),
-    h("p", {}, "Websites prove who they are with certificates. eMudhra, a company that issues them, had the secret keys of eight of its certificates exposed. With those keys anyone can make a convincing fake certificate for any website, such as your bank or email, and read or change what you send."),
-    ev ? h("p", { class: "when" }, `Browsers started blocking them on 17 October 2026. Many apps, servers and tools keep their own list of trusted certificates and still accept them. TrustWatch shows you which ones, and how to fix each.`) : null));
-  nodes.push(renderProbe());
-  nodes.push(renderWays());
-  if (ev) nodes.push(renderStory(ev));
-  $("main").replaceChildren(...nodes);
+function eventStats(scan) {
+  const ev = Object.values(scan.events)[0];
+  if (!ev) return null;
+  const hit = scan.stores.filter(s => s.findings.some(f => f.event === ev.id && f.code === "EVENT_TRUSTED"));
+  return { ev, hit };
 }
+
+function headline(scan) {
+  const total = scan.stores.length;
+  const es = eventStats(scan);
+  const t = scan.targets || {};
+  const name = eventName(es?.ev);
+  if (t.upload) {
+    if (!total) return { title: `No certificate list found in ${t.upload}.`, sub: "Check that this is a certificate bundle, a Java keystore or a program with a built-in list." };
+    const s = scan.stores[0];
+    if (es && es.hit.length) return { title: `${t.upload} still trusts the leaked ${name} certificates.`, sub: MEANING.critical };
+    return { title: s.verdict === "ok" ? `${t.upload} rejects the leaked ${name} certificates.` : `${t.upload} rejects the leaked ${name} certificates, but needs attention.`, sub: MEANING[s.verdict] };
+  }
+  const where = t.host && !(t.images || []).length ? "on this computer" : "in this scan";
+  if (!total) return { title: `No certificate lists found ${where}.`, sub: "Add folders, images or programs and scan again." };
+  if (es && es.hit.length) {
+    return { title: `${es.hit.length} of ${total} certificate lists ${where} still trust the leaked ${name} certificates.`,
+             sub: "Your browser can be up to date while these lists still accept them. Each has its own fix; start with the ones marked Critical." };
+  }
+  const issues = scan.stores.filter(s => ["critical", "high", "medium"].includes(s.verdict)).length;
+  return { title: issues ? `Nothing ${where} trusts the leaked ${name} certificates, but ${plural(issues, "list needs", "lists need")} attention.`
+                         : `Every certificate list ${where} rejects the leaked ${name} certificates.`,
+           sub: issues ? "These trust other certificate authorities that have been removed or restricted." : "This covers the lists checked in this scan. Scan again after installing new software or images." };
+}
+
+function scanButtons(big) {
+  if (!state.local) return [];
+  const container = state.status?.host_scan === false;
+  const cls = `btn primary${big ? " big" : ""} js-scan`;
+  const main = container
+    ? h("button", { class: cls, type: "button", onclick: openDialog, disabled: !!state.busy }, icon("scan"), "Choose what to scan")
+    : h("button", { class: cls, type: "button", disabled: !!state.busy, onclick: () => startScan(state.source?.kind === "server" && state.scan ? state.scan.targets : { host: true }) },
+        icon("scan"), state.busy ? "Scanning…" : state.scan ? "New scan" : "Scan this computer");
+  return [main, container ? null : h("button", { class: `btn${big ? " big" : ""} js-scan`, type: "button", onclick: openDialog, disabled: !!state.busy }, "Choose what to scan")];
+}
+
+function renderOverview() {
+  const scan = state.scan, ev = primaryEvent();
+  const src = state.source;
+  const eyebrow = !scan ? (ev ? `${eventName(ev)} incident · October 2026` : "Certificate trust check")
+    : src?.kind === "file" ? `Report from ${src.label}` : src?.kind === "upload" ? `Check of ${src.label}` : scan.targets?.host ? "Your local trust picture" : "Images and folders";
+  const metaBits = scan ? [`Checked ${when(scan.finished)}`, plural(scan.stores.length, "certificate list"),
+    refDate(scan.reference?.mozilla_roots_as_of) ? `Mozilla's list as of ${refDate(scan.reference.mozilla_roots_as_of)}` : null].filter(Boolean) : [];
+  const head = h("div", { class: "head" },
+    h("div", {},
+      h("div", { class: "eyebrow" }, eyebrow),
+      h("h1", { class: "display" }, "Trust, made visible."),
+      h("p", { class: "sub" }, scan ? "Know what's trusted. Understand what needs your attention."
+        : "Find every certificate list that still trusts the leaked eMudhra certificates, and how to fix each one."),
+      scan ? h("p", { class: "meta" }, metaBits.join(" · ")) : null,
+      scan?.diff ? diffLine(scan.diff) : null),
+    h("div", { class: "head-actions" }, ...scanButtons(true),
+      scan ? h("button", { class: "btn big", type: "button", onclick: downloadReport }, icon("download"), "Download report")
+        : !state.local ? h("button", { class: "btn primary big", type: "button", onclick: () => $("probeBtn")?.scrollIntoView({ behavior: calm() ? "auto" : "smooth", block: "center" }) }, icon("globe"), "Test this browser") : null));
+
+  const stageCard = h("section", { class: "card stage-card", "aria-labelledby": "stackTitle" },
+    h("div", { class: "card-top" },
+      h("div", {}, h("h2", { id: "stackTitle" }, "Inside your trust stack"),
+        h("p", { class: "lead" }, "One computer, many independent lists of trust. Each layer is updated separately.")),
+      h("span", { class: "chip" }, state.prefs.flat ? "Flat view" : "Interactive 3D")),
+    renderStack(), state.prefs.flat ? null : layerChips(), state.prefs.flat ? null : scrubber());
+
+  const out = [head, h("div", { class: "ov" }, stageCard, h("div", { class: "aside-stack" }, asideTop(), scan ? coverageCard(scan) : incidentCard(ev)))];
+  if (scan) out.push(priorities(scan));
+  out.push(moreChecks());
+  if (!scan && ev) out.push(renderStory(ev));
+  return out;
+}
+
+function diffLine(d) {
+  return h("div", { class: "diff" },
+    h("span", {}, `Since the scan ${when(d.previous_finished)}:`),
+    h("span", {}, h("b", { class: "good" }, d.fixed.length), " fixed", d.fixed.length ? ` (${d.fixed.slice(0, 3).join(", ")}${d.fixed.length > 3 ? ", …" : ""})` : ""),
+    h("span", {}, h("b", { class: d.new.length ? "bad" : "" }, d.new.length), d.new.length === 1 ? " new problem" : " new problems",
+      d.new.length ? ` (${d.new.slice(0, 3).join(", ")}${d.new.length > 3 ? ", …" : ""})` : ""));
+}
+
+function asideTop() {
+  const scan = state.scan;
+  if (state.layer) return layerCard(layersFor(scan).find(L => L.key === state.layer));
+  if (!scan) {
+    const container = state.status?.host_scan === false;
+    return h("section", { class: "card attention empty", id: "asideTop" },
+      h("div", { class: "badge-row" }, h("span", { class: "mark" }, icon("layers")), h("span", { class: "chip" }, state.local ? "Ready" : "Read-only")),
+      h("h2", {}, state.local ? (container ? "Scan images and folders." : "See what this computer trusts.") : "Check a computer or server."),
+      h("p", {}, state.local
+        ? (container ? ["TrustWatch is running in Docker, so it checks the images on this computer and the folders mounted into it",
+            state.status.scan_dir ? [" (", h("code", {}, state.status.scan_dir), ")"] : "", "."]
+          : "TrustWatch reads every certificate list here: the system, Python, Node, Java, desktop apps and command-line tools. It changes nothing.")
+        : "Run the scanner on the machine you want to check, then open its report here. Reports are read inside your browser."),
+      state.local && state.status?.app && /Mac/.test(navigator.platform) ? h("p", { class: "hint" }, "macOS may ask whether TrustWatch can read folders such as Documents or Downloads. Allow it to include certificate lists stored there, or skip it; the rest of the scan still runs.") : null,
+      h("div", { class: "actions" }, state.local ? scanButtons(false)
+        : [h("button", { class: "btn primary", type: "button", onclick: () => $("fileInput").click() }, icon("file"), "Open a report"),
+           h("button", { class: "btn", type: "button", onclick: () => $("runSteps")?.scrollIntoView({ behavior: calm() ? "auto" : "smooth" }) }, "How to run a scan")]),
+      state.serverScans.length ? h("p", { class: "foot" }, `Last scan ${when(state.serverScans[0].finished)}. `,
+        h("button", { class: "linkish", type: "button", onclick: () => openServerScan(state.serverScans[0].id) }, "Open it")) : null);
+  }
+  const hd = headline(scan), tone = overallTone(scan);
+  const top = scan.stores.find(s => TONE[s.verdict] === "risk") || scan.stores.find(s => TONE[s.verdict] === "review");
+  const es = eventStats(scan);
+  return h("section", { class: `card attention ${tone}`, id: "asideTop" },
+    h("div", { class: "badge-row" }, h("span", { class: "mark" }, icon(tone === "clear" ? "check" : "alert")),
+      h("span", { class: `tag ${tone === "risk" ? "t-critical" : tone === "review" ? "t-medium" : "t-ok"}` }, tone === "risk" ? "Needs attention" : tone === "review" ? "Worth reviewing" : "No known findings")),
+    h("h2", {}, hd.title), h("p", {}, hd.sub),
+    top ? h("button", { class: "btn go", type: "button", onclick: () => openStore(top.id) }, "Show me why", icon("arrow")) : null,
+    h("p", { class: "foot" }, es?.ev ? [`${eventName(es.ev)} incident · `, es.ev.sources?.[0] ? extLink(es.ev.sources[0], "what happened") : "published data"] : "Compared against Mozilla's list"));
+}
+
+function layerCard(L) {
+  const shown = L.stores.slice(0, 6);
+  return h("section", { class: "card card-pad layer-card", id: "asideTop" },
+    h("div", { class: "badge-row", style: "display:flex;justify-content:space-between;align-items:center" },
+      h("span", { class: "chip" }, h("span", { class: `dot ${L.tone}` }), layerStatus(L)),
+      h("button", { class: "iconbtn", type: "button", "aria-label": "Close layer", onclick: () => selectLayer(null) }, icon("close"))),
+    h("h2", {}, L.name), h("p", { class: "lead" }, L.blurb),
+    shown.length ? h("div", { class: "mini" }, shown.map(s => h("button", { type: "button", onclick: () => openStore(s.id) },
+      h("span", { class: `dot s-${s.verdict}` }), h("span", {}, s.name, s.version ? ` ${s.version}` : ""), h("span", { class: `tag t-${s.verdict}` }, LABEL[s.verdict]))))
+      : h("p", { class: "hint", style: "margin-top:14px" }, state.scan ? "This scan found no certificate list in this layer." : "Run a scan to see what this layer holds."),
+    L.stores.length ? h("button", { class: "linkish", type: "button", style: "margin-top:14px", onclick: () => { state.layerFilter = L.key; state.filter = "all"; navigate("findings"); } },
+      `See all ${L.stores.length} in Findings`, icon("arrow")) : null);
+}
+
+function coverageCard(scan) {
+  const sum = scan.summary, total = scan.stores.length;
+  const risk = atRisk(sum), review = (sum.medium || 0) + (sum.low || 0), clear = (sum.info || 0) + (sum.ok || 0);
+  const partial = scan.stores.filter(s => s.partial).length, skipped = scan.skipped?.length || 0;
+  const seg = (n, cls) => n ? h("span", { class: cls, style: `flex:${n}` }) : null;
+  const leg = (cls, label, n, filter) => h("button", { type: "button", onclick: () => { state.filter = filter; state.layerFilter = null; navigate("findings"); } },
+    h("span", { class: `dot ${cls}` }), label, h("b", {}, n));
+  return h("section", { class: "card card-pad coverage", "aria-label": "Scan coverage" },
+    h("h3", {}, "Scan coverage", h("small", {}, plural(total, "list"))),
+    h("div", { class: "cbar", role: "img", "aria-label": `${risk} at risk, ${review} to review, ${clear} with no known findings` },
+      seg(risk, "s-critical"), seg(review, "s-medium"), seg(clear, "s-ok")),
+    h("div", { class: "cleg" }, leg("s-ok", "No known findings", clear, "clear"), leg("s-critical", "At risk", risk, "risk"), leg("s-medium", "Needs review", review, "review")),
+    partial || skipped ? h("p", { class: "note" }, [partial ? `${plural(partial, "list")} only partly recognised` : null, skipped ? `${plural(skipped, "item")} could not be read` : null].filter(Boolean).join(" · ") + ". These are not counted as clean.") : null);
+}
+
+function incidentCard(ev) {
+  if (!ev) return h("span");
+  return h("section", { class: "card card-pad" },
+    h("h3", { style: "font-size:15px" }, "What happened"),
+    h("p", { class: "lead" }, `The private keys of eMudhra intermediate certificates were exposed. With cross-signed copies, ${ev.compromised} certificates are affected. Browsers blocked them from 17 October 2026; software with its own list still trusts them.`),
+    ev.sources?.[0] ? h("p", { style: "margin-top:12px;font-size:13px" }, extLink(ev.sources[0], "Read the incident report")) : null);
+}
+
+function storeTile(s) { return h("span", { class: "tile" }, icon(LAYERS.find(L => L.key === layerOf(s))?.icon || "file")); }
+function storeRow(s) {
+  return h("button", { class: "row", type: "button", "data-id": s.id, onclick: () => openStore(s.id),
+      "aria-label": `${s.name}${s.version ? " " + s.version : ""}: ${LABEL[s.verdict]}. ${summaryLine(s)}` },
+    storeTile(s),
+    h("span", { style: "min-width:0" }, h("span", { class: "name" }, s.name, s.version ? h("small", {}, s.version) : null), h("span", { class: "loc" }, s.location)),
+    h("span", { class: `tag t-${s.verdict}` }, LABEL[s.verdict]),
+    h("span", { class: "what" }, summaryLine(s)),
+    icon("chev", "chev"));
+}
+
+function priorities(scan) {
+  const worst = scan.stores.filter(s => ["critical", "high", "medium"].includes(s.verdict)).slice(0, 5);
+  return h("section", { class: "section", "aria-labelledby": "prioTitle" },
+    h("div", { class: "section-head" },
+      h("div", {}, h("h2", { id: "prioTitle" }, "Start with what matters"), h("p", {}, "Clear evidence. A specific next step.")),
+      h("button", { class: "linkish", type: "button", onclick: () => { state.filter = "all"; state.layerFilter = null; navigate("findings"); } }, `All ${plural(scan.stores.length, "list")}`, icon("arrow"))),
+    h("div", { class: "card list-card" }, worst.length ? h("div", { class: "rows" }, worst.map(storeRow))
+      : h("div", { class: "allclear" }, h("span", { class: "mark" }, icon("check")),
+          h("div", {}, h("b", {}, "Every list in this scan rejects the leaked certificates."), h("p", { class: "hint" }, "This covers what was checked. Lists that could not be read are listed under Findings.")))));
+}
+
+function moreChecks() {
+  return h("section", { class: "section", "aria-labelledby": "moreTitle" },
+    h("div", { class: "section-head" }, h("div", {}, h("h2", { id: "moreTitle" }, state.scan ? "More checks" : "Check the rest of your software"),
+      h("p", {}, "Apps, programming languages, servers and containers don't use your browser's protection. Each keeps its own list."))),
+    renderProbe(),
+    h("div", { class: "two", style: "margin-top:22px" }, state.local ? null : runSteps(), fileCard()));
+}
+
+/* ---------- browser test ---------- */
 
 function renderProbe() {
   const t = state.status?.browser_test?.[0];
-  const wrap = h("section", { class: "probe", "aria-labelledby": "probeTitle" });
-  if (!t) return wrap;
-  const btn = h("button", { class: "btn primary big", type: "button", id: "probeBtn", onclick: () => runProbe(t) }, "Test this browser");
-  const routes = t.routes.map(r => h("div", { class: "lane" },
-    h("div", { class: "lane-cap" }, h("b", {}, r.anchor === "AAA Certificate Services" ? "Through Sectigo's AAA root" : `Through ${r.anchor}`),
-      ` (${plural(r.hosts.length, "test site")})`),
+  const wrap = h("section", { class: "card card-pad", "aria-labelledby": "probeTitle" });
+  if (!t) return h("span");
+  const routes = t.routes.map(r => h("div", {},
+    h("div", { class: "lane-cap" }, h("b", {}, r.anchor === "AAA Certificate Services" ? "Through Sectigo's AAA root" : `Through ${r.anchor}`), ` (${plural(r.hosts.length, "test site")})`),
     h("div", { class: "cells", role: "list" }, r.hosts.map(host => {
-      const [type, gen, via] = host.split("-");
-      return h("div", { class: "cell", role: "listitem", "data-host": host, title: host },
-        h("b", {}, `${type.toUpperCase()} ${gen.toUpperCase()}`), h("span", {}, "Not tested"));
+      const [type, gen] = host.split("-");
+      return h("div", { class: "cell", role: "listitem", "data-host": host, title: host }, h("b", {}, `${type.toUpperCase()} ${gen.toUpperCase()}`), h("span", {}, "Not tested"));
     }))));
   wrap.append(
     h("div", { class: "probe-head" },
       h("div", {}, h("h2", { id: "probeTitle" }, "Is this browser protected?"),
-        h("p", {}, `Your browser tries to open ${plural(t.hosts.length, "test site")} that use the leaked certificates. A protected browser refuses every one.`)),
-      btn),
+        h("p", { class: "lead" }, `Your browser tries to open ${plural(t.hosts.length, "test site")} that use the leaked certificates. A protected browser refuses every one.`)),
+      h("button", { class: "btn primary", type: "button", id: "probeBtn", onclick: () => runProbe(t) }, icon("globe"), "Test this browser")),
     h("p", { class: "probe-result", id: "probeResult", "aria-live": "polite" }),
     h("p", { class: "probe-advice", id: "probeAdvice", hidden: true }),
     h("div", { class: "lanes" }, routes),
     h("p", { class: "probe-foot" }, "The test sites are run by the researchers who published the incident ",
-      extLink(t.control, safeUrl(t.control)?.host), ". Running the test sends them your IP address, and nothing else. This only tests the browser you're using now; your other apps keep their own certificate lists."));
+      extLink(t.control, safeUrl(t.control)?.host), ". Running the test sends them your IP address, and nothing else. It only tests the browser or window you're using now."));
   return wrap;
 }
 
@@ -519,22 +1160,22 @@ async function probe(url, ms = 10000) {
 
 async function runProbe(t) {
   const btn = $("probeBtn"), result = $("probeResult"), advice = $("probeAdvice");
-  btn.disabled = true; btn.textContent = "Testing…";
+  btn.disabled = true; btn.lastChild.textContent = "Testing…";
   result.className = "probe-result"; result.textContent = "Checking that the test sites can be reached…"; advice.hidden = true;
   const cells = [...document.querySelectorAll(".cell[data-host]")];
   cells.forEach(c => { c.className = "cell testing"; c.querySelector("span").textContent = "Testing"; });
+  const done = () => { advice.hidden = false; btn.disabled = false; btn.lastChild.textContent = "Test again"; announce(result.textContent); };
   const control = t.control ? await probe(t.control) : "connected";
   if (control !== "connected") {
-    cells.forEach(c => { c.className = "cell unknown"; c.querySelector("span").textContent = "Not tested"; });
-    result.textContent = "The test couldn't run from this browser.";
+    cells.forEach(c => { c.className = "cell"; c.querySelector("span").textContent = "Not tested"; });
+    result.textContent = "The test couldn't run from here.";
     advice.textContent = "Even the researchers' normal page didn't load, so a refusal here would mean nothing. You may be offline, or a firewall or browser extension is blocking the test sites. Try another network, or turn off content blockers for this page.";
-    advice.hidden = false; btn.disabled = false; btn.textContent = "Test again"; announce(result.textContent);
-    return;
+    return done();
   }
   result.textContent = "Testing…";
   const outcome = await Promise.all(cells.map(async c => {
     const r = await probe(`https://${c.dataset.host}/`);
-    c.className = `cell ${r === "connected" ? "connected" : r === "refused" ? "refused" : "unknown"}`;
+    c.className = `cell ${r === "connected" ? "connected" : r === "refused" ? "refused" : ""}`;
     c.querySelector("span").textContent = r === "connected" ? "Connected" : r === "refused" ? "Refused" : "No answer";
     return r;
   }));
@@ -550,112 +1191,50 @@ async function runProbe(t) {
   } else {
     result.className = "probe-result good";
     result.textContent = `This browser refused all ${outcome.length} sites. It's protected.`;
-    advice.textContent = "Your browser is fine. Desktop apps, command-line tools, servers and containers keep their own certificate lists, so check those below.";
+    advice.textContent = "Desktop apps, command-line tools, servers and containers keep their own certificate lists, so they need their own check.";
   }
-  advice.hidden = false; btn.disabled = false; btn.textContent = "Test again"; announce(result.textContent);
+  done();
 }
 
-function detectOS() {
-  const ua = navigator.userAgent;
-  return /Windows/.test(ua) ? "windows" : "unix";
-}
+/* ---------- running a scan elsewhere, opening files ---------- */
 
-function renderWays() {
-  const local = state.local;
+function runSteps() {
   const wheel = state.status?.wheel;
   const from = wheel ? `--from ${location.origin}${wheel} ` : "";
   const run = `uvx ${from}trustwatch scan --json trustwatch-report.json`;
   const runImage = `uvx ${from}trustwatch scan --no-host --image your-image:tag --json trustwatch-report.json`;
   const installs = { unix: "curl -LsSf https://astral.sh/uv/install.sh | sh", windows: "powershell -ExecutionPolicy ByPass -c \"irm https://astral.sh/uv/install.ps1 | iex\"" };
-  let os = detectOS();
+  let os = /Windows/.test(navigator.userAgent) ? "windows" : "unix";
   const installBox = h("div", {}, cmd(installs[os]));
   const tabs = h("div", { class: "os-tabs", role: "tablist", "aria-label": "Operating system" },
     [["unix", "macOS and Linux"], ["windows", "Windows"]].map(([k, name]) => h("button", { type: "button", role: "tab", "aria-selected": String(k === os),
       onclick: (e) => { os = k; tabs.querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", String(b === e.currentTarget))); installBox.replaceChildren(cmd(installs[k])); } }, name)));
+  return h("section", { class: "card card-pad", id: "runSteps", "aria-labelledby": "runTitle" },
+    h("h2", { id: "runTitle" }, "Check a computer or server"),
+    h("p", { class: "lead" }, "Run the TrustWatch scanner on the machine you want to check. It only reads files and changes nothing. Or download the desktop app from GitHub."),
+    h("ol", { class: "steps" },
+      h("li", {}, h("div", {}, h("h4", {}, "Install uv, a small Python tool runner (one time)"), tabs, installBox,
+        h("p", {}, "Skip this if ", h("code", {}, "uv --version"), " already works."))),
+      h("li", {}, h("div", {}, h("h4", {}, "Run the scan"), h("p", {}, "In a terminal on that machine:"), cmd(run),
+        h("p", {}, "To check a Docker image instead:"), cmd(runImage))),
+      h("li", {}, h("div", {}, h("h4", {}, "Open the report"), h("p", {}, "Drop ", h("code", {}, "trustwatch-report.json"), " on this page. It is read inside your browser and never uploaded.")))));
+}
 
-  const inContainer = local && state.status?.host_scan === false;
-  const runner = inContainer
-    ? h("div", { class: "way" },
-        h("h3", {}, "Scan images and folders"),
-        h("p", {}, "TrustWatch is running in a Docker container, so it checks the Docker images on this computer and the folders mounted into it",
-          state.status.scan_dir ? [" (", h("code", {}, state.status.scan_dir), ")"] : "", ". To check this computer itself, run TrustWatch outside Docker."),
-        h("div", { class: "local-actions" },
-          h("button", { class: "btn primary big", type: "button", onclick: openDialog }, "Choose what to scan")),
-        state.serverScans.length ? h("p", { class: "count", style: "margin-top:12px" }, `Last scan ${when(state.serverScans[0].finished)}. `,
-          h("button", { class: "linkish", type: "button", onclick: () => openServerScan(state.serverScans[0].id) }, "Open it")) : null)
-    : local
-    ? h("div", { class: "way" },
-        h("h3", {}, "Scan this computer"),
-        h("p", {}, "TrustWatch is running on this computer, so it can check every certificate list here directly: the system, Python, Node, Java, desktop apps and command-line tools, plus any Docker images you choose."),
-        state.status?.app && /Mac/.test(navigator.platform) ? h("p", { class: "hint" }, "macOS may ask whether TrustWatch can read folders such as Documents or Downloads. Allow it to include certificate lists stored there, or skip it; the rest of the scan still runs.") : null,
-        h("div", { class: "local-actions" },
-          h("button", { class: "btn primary big", type: "button", onclick: () => startScan({ host: true }) }, state.serverScans.length ? "Scan again" : "Scan this computer"),
-          h("button", { class: "btn big", type: "button", onclick: openDialog }, "Choose what to scan")),
-        state.serverScans.length ? h("p", { class: "count", style: "margin-top:12px" }, `Last scan ${when(state.serverScans[0].finished)}. `,
-          h("button", { class: "linkish", type: "button", onclick: () => openServerScan(state.serverScans[0].id) }, "Open it")) : null)
-    : h("div", { class: "way" },
-        h("h3", {}, "Check a computer or server"),
-        h("p", {}, "Run the TrustWatch scanner on the machine you want to check. It only reads files and changes nothing. Then open its report here."),
-        h("ol", { class: "steps" },
-          h("li", {}, h("div", {}, h("h4", {}, "Install uv, a small Python tool runner (one time)"), tabs, installBox,
-            h("p", {}, "Skip this if ", h("code", {}, "uv --version"), " already works."))),
-          h("li", {}, h("div", {}, h("h4", {}, "Run the scan"), h("p", {}, "In a terminal on that machine:"), cmd(run),
-            h("p", {}, "To check a Docker image instead:"), cmd(runImage))),
-          h("li", {}, h("div", {}, h("h4", {}, "Open the report"), h("p", {}, "Drop ", h("code", {}, "trustwatch-report.json"), " on the box on this page. It is read inside your browser and never uploaded.")))));
-
-  const drop = h("div", { class: "drop", id: "drop", tabindex: "0", role: "button", "aria-describedby": "dropHelp",
+function fileCard() {
+  const drop = h("div", { class: "drop", tabindex: "0", role: "button", "aria-describedby": "dropHelp",
       onclick: () => $("fileInput").click(), onkeydown: (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("fileInput").click(); } } },
-    h("b", {}, "Drop a file here"), h("span", { id: "dropHelp" }, "or choose one from your computer"),
-    h("div", {}, h("span", { class: "btn", "aria-hidden": "true" }, "Choose a file")));
-  const way2 = h("div", { class: "way" },
-    h("h3", {}, local ? "Open a report or check a file" : "Open a report, or check one file"),
-    h("p", {}, "Accepted files:"),
+    icon("file"), h("b", {}, "Drop a file here"), h("span", { id: "dropHelp" }, "or choose one from your computer"));
+  wireDrop(drop);
+  return h("section", { class: "card card-pad", "aria-labelledby": "fileTitle" },
+    h("h2", { id: "fileTitle" }, "Open a report or check a file"),
     drop,
     h("ul", { class: "kinds" },
       h("li", {}, h("b", {}, "A TrustWatch report"), " (", h("code", {}, ".json"), "): read in your browser, never uploaded."),
       h("li", {}, h("b", {}, "A certificate list"), " such as ", h("code", {}, "cacert.pem"), " or ", h("code", {}, "ca-bundle.crt"), ", or a Java keystore (", h("code", {}, "cacerts"), ")."),
       h("li", {}, h("b", {}, "A program"), " with a built-in certificate list, such as a Go or Rust service (up to ", `${Math.round((state.status?.max_upload || 26214400) / 1048576)} MB).`)),
-    h("p", { class: "count", style: "margin:12px 0 0" }, local ? "Certificate lists and programs are checked by the TrustWatch running on this computer." :
+    h("p", { class: "hint", style: "margin-top:12px" }, state.local ? "Certificate lists and programs are checked by the TrustWatch running on this computer." :
       "Certificate lists and programs are sent to this site, checked in memory and deleted straight away. Nothing is stored."));
-  wireDrop(drop);
-  return h("section", { class: "section", "aria-labelledby": "waysTitle" },
-    h("h2", { id: "waysTitle" }, "Check the rest of your software"),
-    h("p", { class: "lead" }, "Apps, programming languages, servers and containers don't use your browser's protection. Each has its own copy of the trusted list, and each copy needs its own update."),
-    h("div", { class: "ways" }, runner, way2));
 }
-
-function renderStory(ev) {
-  return h("section", { class: "section story", "aria-labelledby": "storyTitle" },
-    h("div", {},
-      h("h2", { id: "storyTitle", style: "margin:0 0 16px;font-size:24px;letter-spacing:-0.015em" }, "What happened"),
-      h("ol", { class: "timeline" },
-        h("li", {}, h("time", {}, "October 2026"), h("p", {}, `Researchers showed that the private keys of eight eMudhra intermediate certificates can be worked out from the certificates themselves. Copies cross-signed by Sectigo bring the total to ${ev.compromised} affected certificates.`)),
-        h("li", {}, h("time", {}, "17 to 20 October 2026"), h("p", {}, "Chrome, Firefox, Safari and Edge block the certificates, so up-to-date browsers are safe.")),
-        h("li", { class: "now" }, h("time", {}, "Now"), h("p", {}, "Software with its own certificate list still trusts them until that list is updated. That includes the tools behind curl and git, Python and pip, Node.js, Java, desktop apps such as Slack and VS Code, and container images."))),
-      h("details", { class: "glossary" }, h("summary", {}, "What is a certificate authority?"),
-        h("p", {}, "A certificate authority (CA) is a company that browsers and operating systems trust to vouch for websites. When you visit a site, it shows a certificate signed by a CA; if your software trusts that CA, you see the padlock."),
-        h("p", {}, `The affected roots are ${ev.affected_roots.join(", ")}. Once they are removed from a trusted list, nothing that list protects can be fooled by the leaked keys.`),
-        h("p", {}, "Read more: ", ev.sources.map((u, i) => [i ? ", " : "", extLink(u)])))),
-    h("div", {},
-      h("h2", { style: "margin:0 0 16px;font-size:24px;letter-spacing:-0.015em" }, "Who needs to do something"),
-      h("dl", { class: "who" },
-        h("dt", {}, "Everyone"), h("dd", {}, "Update your browser, your operating system and your desktop apps as updates arrive, then test this browser above."),
-        h("dt", {}, "Developers"), h("dd", {}, "Scan your laptop. Python, pip, Node.js, Java and tools like uv and Bun each carry their own list, and many still accept the certificates."),
-        h("dt", {}, "IT, platform and security teams"), h("dd", {}, "Scan servers and every container image you ship. Add TrustWatch to your build so an image that still trusts a compromised authority fails before it is released."))));
-}
-
-function renderFoot() {
-  const s = state.status;
-  const ref = refDate(s?.reference?.mozilla_roots_as_of);
-  $("foot").replaceChildren(
-    h("p", {}, state.local ? "This dashboard runs on your computer and only answers to it. Scans read certificate lists and never change them."
-      : "This site never scans the computer it runs on. Reports you open stay in your browser; files you check are deleted as soon as they are checked."),
-    h("p", {}, `TrustWatch ${s?.version || ""}. Compared against Mozilla's trusted list${ref ? ` as of ${ref}` : ""} and the published incident data.`),
-    h("p", {}, "Free and open source under the ", extLink("https://github.com/Naveen-Sai-Ganadi/trustwatch/blob/main/LICENSE", "MIT License"),
-      ", made for public, educational and personal use. Provided as is, without warranty of any kind."));
-}
-
-/* ---------- files: reports and certificate lists ---------- */
 
 function wireDrop(el) {
   el.addEventListener("dragover", (e) => { e.preventDefault(); el.classList.add("over"); });
@@ -689,89 +1268,32 @@ async function openFile(file) {
     const body = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(body.error || `Check failed (${r.status})`);
     saveReport(body, `File: ${file.name}`);
+    setBusy(false);
     showReport(body, { kind: "upload", label: file.name });
-  } catch (e) { toast(e.message); }
-  finally { setBusy(false); }
+  } catch (e) { setBusy(false); toast(e.message); }
 }
 
-/* ---------- report: overview ---------- */
-
-function eventStats(scan) {
-  const ev = Object.values(scan.events)[0];
-  if (!ev) return null;
-  const hit = scan.stores.filter(s => s.findings.some(f => f.event === ev.id && f.code === "EVENT_TRUSTED"));
-  return { ev, hit };
+function renderStory(ev) {
+  return h("section", { class: "section two", "aria-label": "About the incident" },
+    h("div", { class: "card card-pad" },
+      h("h2", {}, "What happened"),
+      h("ol", { class: "timeline" },
+        h("li", {}, h("time", {}, "October 2026"), h("p", {}, `Researchers showed that the private keys of eight eMudhra intermediate certificates can be worked out from the certificates themselves. Copies cross-signed by Sectigo bring the total to ${ev.compromised} affected certificates.`)),
+        h("li", {}, h("time", {}, "17 to 20 October 2026"), h("p", {}, "Chrome, Firefox, Safari and Edge block the certificates, so up-to-date browsers are safe.")),
+        h("li", { class: "now" }, h("time", {}, "Now"), h("p", {}, "Software with its own certificate list still trusts them until that list is updated: the tools behind curl and git, Python and pip, Node.js, Java, desktop apps such as Slack and VS Code, and container images."))),
+      h("details", { class: "plain" }, h("summary", {}, "What is a certificate authority?"),
+        h("p", { class: "lead" }, "A certificate authority (CA) is a company that browsers and operating systems trust to vouch for websites. When you visit a site, it shows a certificate signed by a CA; if your software trusts that CA, you see the padlock."),
+        h("p", { class: "lead" }, `The affected roots are ${ev.affected_roots.join(", ")}. Once they are removed from a trusted list, nothing that list protects can be fooled by the leaked keys.`),
+        h("p", { class: "lead" }, "Read more: ", ev.sources.map((u, i) => [i ? ", " : "", extLink(u)])))),
+    h("div", { class: "card card-pad" },
+      h("h2", {}, "Who needs to do something"),
+      h("dl", { class: "whos" },
+        h("dt", {}, "Everyone"), h("dd", {}, "Update your browser, your operating system and your desktop apps as updates arrive, then test this browser above."),
+        h("dt", {}, "Developers"), h("dd", {}, "Scan your laptop. Python, pip, Node.js, Java and tools like uv and Bun each carry their own list, and many still accept the certificates."),
+        h("dt", {}, "IT, platform and security teams"), h("dd", {}, "Scan servers and every container image you ship. Add TrustWatch to your build so an image that still trusts a compromised authority fails before it is released."))));
 }
 
-function headline(scan) {
-  const total = scan.stores.length;
-  const es = eventStats(scan);
-  const t = scan.targets || {};
-  const name = eventName(es?.ev);
-  if (t.upload) {
-    if (!total) return { title: `TrustWatch found no certificate list in ${t.upload}.`, sub: "Check that this is a certificate bundle, a Java keystore or a program with a built-in list." };
-    const s = scan.stores[0];
-    if (es && es.hit.length) return { title: `${t.upload} still trusts the leaked ${name} certificates.`, sub: MEANING.critical };
-    return { title: s.verdict === "ok" ? `${t.upload} rejects the leaked ${name} certificates.` : `${t.upload} rejects the leaked ${name} certificates, but needs attention.`, sub: MEANING[s.verdict] };
-  }
-  const where = t.host && !(t.images || []).length ? "on this computer" : "in this scan";
-  if (!total) return { title: `No certificate lists found ${where}.`, sub: "Add folders, images or programs and scan again." };
-  if (es && es.hit.length) {
-    return { title: `${es.hit.length} of ${total} certificate lists ${where} still trust the leaked ${name} certificates.`,
-             sub: "Each one below has its own fix. Start with the ones marked Critical." };
-  }
-  const issues = scan.stores.filter(s => ["critical", "high", "medium"].includes(s.verdict)).length;
-  return { title: issues ? `Nothing ${where} trusts the leaked ${name} certificates, but ${plural(issues, "list needs", "lists need")} attention.`
-                         : `Every certificate list ${where} rejects the leaked ${name} certificates.`,
-           sub: issues ? "The items below trust other certificate authorities that have been removed or restricted." : "Nothing to do. Scan again after installing new software or images." };
-}
-
-function renderOverview(scan) {
-  const hd = headline(scan);
-  const es = eventStats(scan);
-  const src = state.source;
-  const crumbs = h("div", { class: "crumbs" },
-    h("button", { class: "linkish", type: "button", onclick: goHome }, "Start page"),
-    h("span", { "aria-hidden": "true" }, "/"),
-    h("span", {}, src?.kind === "file" ? `Report from ${src.label}` : src?.kind === "upload" ? `Check of ${src.label}` : scan.targets?.host ? "Scan of this computer" : "Scan of images and folders"));
-  const kids = [h("h1", {}, hd.title), hd.sub && h("p", {}, hd.sub)];
-  const ref = refDate(scan.reference?.mozilla_roots_as_of);
-  const meta = [`Checked ${when(scan.finished)}`, plural(scan.stores.length, "certificate list"), ref ? `Mozilla's list as of ${ref}` : null].filter(Boolean);
-  kids.push(h("p", { class: "status-line" }, meta.join(", "), es?.ev.sources?.[0] ? [". Incident details: ", extLink(es.ev.sources[0])] : "."));
-  if (scan.diff) {
-    const d = scan.diff;
-    kids.push(h("div", { class: "diff" },
-      h("span", {}, `Since the scan ${when(d.previous_finished)}:`),
-      h("span", {}, h("b", { class: "good" }, d.fixed.length), " fixed", d.fixed.length ? ` (${d.fixed.slice(0, 3).join(", ")}${d.fixed.length > 3 ? ", …" : ""})` : ""),
-      h("span", {}, h("b", { class: d.new.length ? "bad" : "" }, d.new.length), d.new.length === 1 ? " new problem" : " new problems",
-        d.new.length ? ` (${d.new.slice(0, 3).join(", ")}${d.new.length > 3 ? ", …" : ""})` : "")));
-  }
-  kids.push(h("div", { class: "report-actions" },
-    h("button", { class: "btn", type: "button", onclick: downloadReport }, "Download report"),
-    state.local && src?.kind === "server" ? h("button", { class: "btn", type: "button", onclick: () => startScan(scan.targets) }, "Scan again") : null));
-  const out = [crumbs, h("section", { class: "verdict" }, kids)];
-  const sum = scan.summary;
-  const total = scan.stores.length;
-  if (total > 1) {
-    const bar = h("div", { class: "spread-bar", role: "img", "aria-label": ORDER.filter(k => sum[k]).map(k => `${sum[k]} ${LABEL[k]}`).join(", ") },
-      ORDER.filter(k => sum[k]).map(k => h("span", { class: `s-${k}`, style: `flex:${sum[k] / total}`, title: `${sum[k]} ${LABEL[k]}` })));
-    const legend = h("div", { class: "legend", role: "group", "aria-label": "Show only" },
-      h("button", { type: "button", "aria-pressed": String(state.filter === "all"), onclick: () => setFilter("all") }, `All ${total}`),
-      ORDER.filter(k => sum[k]).map(k => h("button", { type: "button", "aria-pressed": String(state.filter === k), onclick: () => setFilter(k) },
-        h("span", { class: `dot s-${k}`, "aria-hidden": "true" }), `${sum[k]} ${LABEL[k].toLowerCase()}`)));
-    out.push(h("section", { class: "spread", "aria-label": "Results by severity" }, bar, legend, meanings(ORDER.filter(k => sum[k]))));
-  }
-  return out;
-}
-
-function meanings(keys) {
-  return h("details", { class: "meanings" }, h("summary", {}, "What do these mean?"),
-    h("dl", {}, keys.map(k => [h("dt", {}, h("span", { class: `tag t-${k}` }, LABEL[k])), h("dd", {}, MEANING[k])])));
-}
-
-function setFilter(f) { state.filter = f; renderReport(); }
-
-/* ---------- report: list ---------- */
+/* ---------- findings ---------- */
 
 function summaryLine(s) {
   const top = s.findings.find(f => f.severity !== "info");
@@ -784,9 +1306,39 @@ function summaryLine(s) {
 
 function visibleStores(scan) {
   const q = state.query.toLowerCase();
-  return scan.stores.filter(s => (state.filter === "all" || s.verdict === state.filter) &&
+  const f = state.filter;
+  return scan.stores.filter(s => (f === "all" || s.verdict === f || TONE[s.verdict] === f) &&
+    (!state.layerFilter || layerOf(s) === state.layerFilter) &&
     (!q || `${s.name} ${s.location} ${s.version || ""} ${s.group}`.toLowerCase().includes(q)));
 }
+
+function renderFindings() {
+  const scan = state.scan;
+  const head = h("div", { class: "head" }, h("div", {},
+    h("div", { class: "eyebrow" }, scan ? `${plural(scan.stores.length, "certificate list")} · ${when(scan.finished)}` : "Findings"),
+    h("h1", { class: "display" }, "Every list, with its fix."),
+    h("p", { class: "sub" }, "Select a list to see the evidence: where it is, which compromised chains it accepts, and the exact command that fixes it.")),
+    h("div", { class: "head-actions" }, scan ? h("button", { class: "btn", type: "button", onclick: downloadReport }, icon("download"), "Download report") : null));
+  if (!scan) return [head, emptyCard("No scan to show yet.", state.local ? "Scan this computer, or open a report someone sent you." : "Open a TrustWatch report to see its findings.")];
+  const sum = scan.summary;
+  const filters = h("div", { class: "filters", role: "group", "aria-label": "Show only" },
+    h("button", { type: "button", "aria-pressed": String(state.filter === "all"), onclick: () => setFilter("all") }, `All ${scan.stores.length}`),
+    ORDER.filter(k => sum[k]).map(k => h("button", { type: "button", "aria-pressed": String(state.filter === k), onclick: () => setFilter(k) },
+      h("span", { class: `dot s-${k}`, "aria-hidden": "true" }), `${sum[k]} ${LABEL[k].toLowerCase()}`)));
+  const layer = state.layerFilter && LAYERS.find(L => L.key === state.layerFilter);
+  const search = h("input", { class: "search", type: "search", placeholder: "Search by app, tool or path", value: state.query, "aria-label": "Search certificate lists",
+    oninput: (e) => { state.query = e.target.value; $("list").replaceWith(renderList(scan)); $("shown").textContent = `${visibleStores(scan).length} shown`; } });
+  return [head,
+    h("div", { class: "tools" }, filters, layer ? h("button", { class: "chip", type: "button", onclick: () => { state.layerFilter = null; render(); } }, `Layer: ${layer.name}`, icon("close")) : null),
+    h("div", { class: "tools" }, search, h("span", { class: "count", id: "shown" }, `${visibleStores(scan).length} shown`)),
+    renderList(scan),
+    details(MEANING)];
+}
+function details() {
+  return h("details", { class: "plain" }, h("summary", {}, "What do the labels mean?"),
+    h("dl", {}, ORDER.map(k => [h("dt", {}, h("span", { class: `tag t-${k}` }, LABEL[k])), h("dd", {}, MEANING[k])])));
+}
+function setFilter(f) { state.filter = f; render(); }
 
 function renderList(scan) {
   const shown = visibleStores(scan);
@@ -794,68 +1346,60 @@ function renderList(scan) {
   for (const s of shown) { if (!groups.has(s.group)) groups.set(s.group, []); groups.get(s.group).push(s); }
   const list = h("div", { id: "list" });
   if (!shown.length && scan.stores.length) list.append(h("p", { class: "count" }, "Nothing matches. ",
-    h("button", { class: "linkish", type: "button", onclick: () => { state.query = ""; state.filter = "all"; renderReport(); } }, "Show everything")));
-  for (const [name, stores] of groups) {
-    const bad = stores.filter(s => ["critical", "high"].includes(s.verdict)).length;
-    list.append(h("section", { class: "group" },
-      h("h2", {}, name, h("small", {}, `${plural(stores.length, "list")}${bad ? `, ${bad} at risk` : ""}`)),
-      h("div", { class: "rows" }, stores.map(s => h("button", {
-        class: "row", type: "button", "data-id": s.id, "aria-current": String(state.selected === s.id), onclick: () => openStore(s.id),
-        "aria-label": `${s.name}${s.version ? " " + s.version : ""}: ${LABEL[s.verdict]}. ${summaryLine(s)}` },
-        h("span", { class: `dot s-${s.verdict}`, "aria-hidden": "true" }),
-        h("span", { class: "name" }, s.name, s.version ? h("small", {}, s.version) : null),
-        h("span", { class: "what" }, summaryLine(s)),
-        h("span", { class: `tag t-${s.verdict}` }, LABEL[s.verdict]))))));
+    h("button", { class: "linkish", type: "button", onclick: () => { state.query = ""; state.filter = "all"; state.layerFilter = null; render(); } }, "Show everything")));
+  if (groups.size) {
+    const card = h("div", { class: "card list-card" });
+    for (const [name, stores] of groups) {
+      const bad = stores.filter(s => TONE[s.verdict] === "risk").length;
+      card.append(h("div", { class: "group-cap" }, h("h3", {}, name), h("small", {}, `${plural(stores.length, "list")}${bad ? `, ${bad} at risk` : ""}`)),
+        h("div", { class: "rows" }, stores.map(storeRow)));
+    }
+    list.append(card);
   }
-  if (scan.skipped?.length) list.append(h("details", { class: "skipped", open: !scan.stores.length },
+  if (scan.skipped?.length) list.append(h("details", { class: "plain", open: !scan.stores.length },
     h("summary", {}, `${plural(scan.skipped.length, "item")} could not be checked`),
     h("ul", {}, scan.skipped.map(k => h("li", {}, h("b", {}, k.kind), " ", h("span", { class: "mono" }, k.location), `: ${k.reason}`)))));
   return list;
 }
 
-function renderTools(scan) {
-  if (scan.stores.length < 6) return null;
-  const search = h("input", { class: "search", type: "search", placeholder: "Search by app, tool or path", value: state.query,
-    "aria-label": "Search certificate lists", oninput: (e) => { state.query = e.target.value; $("list").replaceWith(renderList(state.scan)); $("shown").textContent = `${visibleStores(state.scan).length} shown`; } });
-  return h("div", { class: "tools" }, search, h("span", { class: "count", id: "shown" }, `${visibleStores(scan).length} shown`));
+function emptyCard(title, text) {
+  return h("section", { class: "card card-pad", style: "text-align:center;padding:48px 24px" },
+    h("span", { class: "tile", style: "display:inline-grid;place-items:center;width:56px;height:56px;border-radius:50%;background:var(--cobalt-wash);color:var(--cobalt)" }, icon("layers")),
+    h("h2", { style: "margin-top:16px" }, title), h("p", { class: "lead" }, text),
+    h("div", { class: "head-actions", style: "justify-content:center;margin-top:18px" }, ...scanButtons(false),
+      h("button", { class: "btn", type: "button", onclick: () => $("fileInput").click() }, icon("file"), "Open a report")));
 }
 
-function renderReport() {
-  const scan = state.scan;
-  $("main").replaceChildren(...renderOverview(scan), renderTools(scan) || "", renderList(scan));
-}
-
-/* ---------- report: detail panel ---------- */
+/* ---------- evidence ---------- */
 
 function chainDiagram(scan, finding) {
   const ev = scan.events[finding.event];
   if (!ev || !Array.isArray(ev.routes)) return null;
   const accepted = new Set(finding.accepted || []);
-  const wrap = h("div", { class: "chain", role: "list", "aria-label": "Chains of trust tested" });
+  const wrap = h("div", { role: "list", "aria-label": "Chains of trust tested" });
   for (const r of ev.routes) {
     const hits = r.hosts.filter(x => accepted.has(x)).length;
     const trusted = hits > 0;
-    const nodes = [h("div", { class: "node" }, h("b", {}, "Test website"), h("small", {}, `${plural(r.hosts.length, "site")}, signed by`)),
-      h("div", { class: "node bad" }, h("b", {}, "Leaked intermediate"), h("small", {}, `${r.path[0]} and ${r.hosts.length - 1} more`))];
-    for (const mid of r.path.slice(1)) nodes.push(h("div", { class: "node" }, h("b", {}, mid), h("small", {}, "cross-signed")));
-    nodes.push(h("div", { class: `node anchor ${trusted ? "trusted" : "safe"}` },
+    const nodes = [h("div", { class: "node" }, icon("file"), h("b", {}, "Test website"), h("small", {}, `${plural(r.hosts.length, "site")}, signed by`)),
+      h("div", { class: "node bad" }, icon("alert"), h("b", {}, "Leaked intermediate"), h("small", {}, `${r.path[0]} and ${r.hosts.length - 1} more`))];
+    for (const mid of r.path.slice(1)) nodes.push(h("div", { class: "node" }, icon("link"), h("b", {}, mid), h("small", {}, "cross-signed")));
+    nodes.push(h("div", { class: `node anchor ${trusted ? "trusted" : "safe"}` }, icon(trusted ? "alert" : "check"),
       h("b", {}, r.anchor), h("small", {}, trusted ? "trusted here" : "not trusted here")));
     const row = h("div", { class: "links", "aria-hidden": "true" });
     nodes.forEach((n, i) => { if (i) row.append(h("span", { class: `link${!trusted && i === nodes.length - 1 ? " broken" : ""}` })); row.append(n); });
     wrap.append(h("div", { class: "route", role: "listitem" },
       h("div", { class: "route-cap" }, `Path through ${r.anchor}`), row,
-      h("div", { class: `route-result ${trusted ? "trusted" : "safe"}` },
-        trusted ? `Accepts ${hits} of ${r.hosts.length} chains on this path.` : "Rejects every chain on this path.")));
+      h("div", { class: `route-result ${trusted ? "trusted" : "safe"}` }, trusted ? `Accepts ${hits} of ${r.hosts.length} chains on this path.` : "Rejects every chain on this path.")));
   }
   const shown = new Set(ev.routes.flatMap(r => r.hosts));
   const extra = (ev.chains ?? shown.size) - shown.size;
   if (extra > 0) {
     const hits = [...accepted].filter(x => !shown.has(x)).length;
-    wrap.append(h("p", { class: `route-result ${hits ? "trusted" : "safe"}` }, hits
+    wrap.append(h("p", { class: `route-result ${hits ? "trusted" : "safe"}`, style: "margin-top:14px" }, hits
       ? `Also accepts ${hits} of ${extra} extra test chains whose certificates were never logged publicly (Certificate Transparency), so their use would go unnoticed.`
       : `Rejects the ${plural(extra, "extra test chain")} whose certificates were never logged publicly (Certificate Transparency).`));
   }
-  return wrap;
+  return [h("p", { class: "chain-title" }, "The paths that were tested"), wrap];
 }
 
 function fixBlock(f) {
@@ -865,83 +1409,136 @@ function fixBlock(f) {
     const isCmd = /^(sudo |sed |apk |trust |d=|F=|t=|\[ |rm |openssl |security\.pki|brew |pip |python |powershell|apt-get |certutil|keytool )/.test(line) || /&&/.test(line);
     items.push(isCmd ? cmd(line) : h("p", { class: "step" }, line));
   }
-  return h("div", { class: "fix" }, h("h4", {}, "How to fix"), items,
+  return h("div", { class: "fix" }, h("h5", {}, "Your next step"), items,
     f.patched?.length ? h("p", { class: "patched" }, h("b", {}, "Fixed in: "), f.patched.map(p => `${p.software} ${p.patched}`).join("; ")) : null);
 }
 
+let lastOpener = null;
 function openStore(id) {
   const scan = state.scan;
-  const s = scan.stores.find(x => x.id === id);
+  const s = scan?.stores.find(x => x.id === id);
   if (!s) return;
-  state.selected = id;
-  const panel = $("panel");
+  lastOpener = document.activeElement;
   const where = s.origin === "host" ? "This computer" : s.origin === "upload" ? "Your file" : String(s.origin).replace("image:", "Image ");
-  panel.replaceChildren(
-    h("div", { class: "panel-head" },
-      h("div", {}, h("span", { class: `tag t-${s.verdict}` }, LABEL[s.verdict]),
-        h("h2", { id: "panelTitle" }, s.name), h("div", { class: "path" }, s.location)),
-      h("button", { class: "close", type: "button", "aria-label": "Close details", onclick: closeStore }, "×")),
-    h("div", { class: "panel-body" },
-      h("p", { class: `plain ${s.verdict}` }, MEANING[s.verdict]),
+  const ev = Object.values(scan.events)[0];
+  const dlg = $("evidence");
+  dlg.replaceChildren(h("div", { class: "sheet-in" },
+    h("div", { class: "sheet-head" }, h("h2", { id: "evTitle" }, "Follow the evidence"),
+      h("button", { class: "iconbtn", type: "button", "aria-label": "Close", onclick: () => dlg.close() }, icon("close"))),
+    h("div", { class: "sheet-body" },
+      h("span", { class: `tag t-${s.verdict}` }, LABEL[s.verdict]),
+      h("h3", { class: "title" }, s.name, s.version ? h("small", {}, s.version) : null),
+      h("p", { class: "plainline" }, MEANING[s.verdict]),
+      h("div", { class: "pathbox" }, icon("file"), h("span", {}, s.location)),
       h("dl", { class: "facts" },
-        s.version ? [h("dt", {}, "Version"), h("dd", {}, s.version)] : null,
-        h("dt", {}, "Where"), h("dd", {}, where),
-        s.kind !== "os-verifier" ? [h("dt", {}, "Certificates"), h("dd", {}, `${s.certificates}${s.partial ? " recognised (partial list)" : ""}`)] : null,
-        s.blocked ? [h("dt", {}, "Block list"), h("dd", {}, plural(s.blocked, "certificate"))] : null),
+        h("div", {}, h("dt", {}, "Where"), h("dd", {}, where)),
+        h("div", {}, h("dt", {}, "Layer"), h("dd", {}, LAYERS.find(L => L.key === layerOf(s))?.name)),
+        s.kind !== "os-verifier" ? h("div", {}, h("dt", {}, "Certificates"), h("dd", {}, `${s.certificates}${s.partial ? " recognised (partial list)" : ""}`)) : null,
+        s.blocked ? h("div", {}, h("dt", {}, "Block list"), h("dd", {}, plural(s.blocked, "certificate"))) : null),
       s.note ? h("p", { class: "note" }, s.note) : null,
       s.findings.length ? s.findings.map(f => h("section", { class: "finding" },
-        h("h3", {}, h("span", { class: `tag t-${f.severity}` }, LABEL[f.severity]), f.title),
+        h("h4", {}, h("span", { class: `tag t-${f.severity}` }, LABEL[f.severity]), f.title),
         f.event ? chainDiagram(scan, f) : null,
         h("p", {}, f.detail),
         f.certs?.length && !f.event ? h("ul", {}, f.certs.slice(0, 40).map(c => h("li", {}, c)), f.certs.length > 40 ? h("li", {}, `and ${f.certs.length - 40} more`) : null) : null,
         f.event && f.certs?.length ? h("p", {}, h("b", {}, "Affected roots here: "), f.certs.join(", ")) : null,
         fixBlock(f),
         f.sources?.length ? h("p", { class: "sources" }, "Sources: ", f.sources.map((u, i) => [i ? ", " : "", extLink(u, u)])) : null))
-      : h("section", { class: "finding" }, h("h3", {}, h("span", { class: "tag t-ok" }, "Clean"), "No problems found"),
+      : h("section", { class: "finding" }, h("h4", {}, h("span", { class: "tag t-ok" }, "Clean"), "No problems found"),
           h("p", {}, s.kind === "os-verifier" ? "The system's own check rejects every published test chain." :
-            "This list rejects every published test chain and matches Mozilla's current list closely enough to pass."))));
-  document.documentElement.style.setProperty("--bar-h", `${document.querySelector(".bar").offsetHeight}px`);
-  panel.classList.add("open");
-  panel.setAttribute("aria-hidden", "false");
-  document.querySelectorAll(".row").forEach(r => r.setAttribute("aria-current", String(Number(r.dataset.id) === id)));
-  panel.querySelector(".close").focus();
+            "This list rejects every published test chain and matches Mozilla's current list closely enough to pass."))),
+    h("div", { class: "sheet-foot" },
+      ev?.sources?.[0] ? extLink(ev.sources[0], "Incident reference") : h("span"),
+      state.local && state.source?.kind === "server"
+        ? h("button", { class: "btn primary js-scan", type: "button", disabled: !!state.busy, onclick: () => { dlg.close(); startScan(scan.targets); } }, "Scan again to verify", icon("scan"))
+        : h("button", { class: "btn", type: "button", onclick: () => dlg.close() }, "Done"))));
+  dlg.showModal();
+  dlg.querySelector(".iconbtn").focus();
+}
+$("evidence").addEventListener("close", () => { if (lastOpener?.isConnected) lastOpener.focus(); });
+$("evidence").addEventListener("click", (e) => { if (e.target === $("evidence")) $("evidence").close(); });
+
+/* ---------- history ---------- */
+
+function renderHistory() {
+  const scan = state.scan, d = scan?.diff;
+  const head = h("div", { class: "head" }, h("div", {},
+    h("h1", { class: "display" }, "Progress you can verify."),
+    h("p", { class: "sub" }, "Compare scans of the same things. A smaller count only means progress when the scope matches.")),
+    h("div", { class: "head-actions" }, scan ? h("button", { class: "btn", type: "button", onclick: downloadReport }, icon("download"), "Download report") : null));
+  const out = [head];
+  if (scan) {
+    const n = atRisk(scan.summary);
+    out.push(h("section", { class: "card compare", "aria-label": "Comparison" },
+      h("div", {}, h("small", {}, "This scan"), h("b", { class: n ? "bad" : "good" }, plural(n, "list"), " at risk"),
+        h("span", {}, `${plural(scan.stores.length, "list")} checked ${when(scan.finished)}`)),
+      h("div", {}, h("small", {}, "Previous scan of the same things"), h("b", {}, d ? when(d.previous_finished) : "None yet"),
+        h("span", {}, d ? "Same scope, so the change is meaningful" : "Scan the same things again to compare")),
+      h("div", {}, h("small", {}, "Change"), d ? h("b", { class: d.new.length ? "bad" : "good" }, `${d.fixed.length} fixed`) : h("b", {}, "—"),
+        h("span", {}, d ? (d.new.length ? `${plural(d.new.length, "new problem")}: ${d.new.slice(0, 3).join(", ")}` : "No new problems") : ""))));
+  }
+  const items = [];
+  for (const s of state.serverScans) items.push(h("button", { class: "item", type: "button", "aria-current": String(state.source?.kind === "server" && state.scan?.id === s.id),
+      onclick: () => openServerScan(s.id) },
+    h("span", { class: "pip" }), h("span", {}, h("b", {}, `${when(s.finished)} · ${state.status?.host_scan === false ? "Images and folders" : "This computer"}`),
+      h("small", {}, `${plural(s.stores, "list")} · ${atRisk(s.summary)} at risk`)), h("span", { class: "chip" }, "Scan"), icon("chev")));
+  savedReports().forEach((r, i) => items.push(h("button", { class: "item", type: "button", onclick: () => { const x = savedReports()[i]; if (x && validReport(x.data)) showReport(x.data, { kind: "file", label: x.label.replace(/^(Report|File): /, "") }); } },
+    h("span", { class: "pip" }), h("span", {}, h("b", {}, r.label), h("small", {}, `${when(r.finished)} · ${plural(r.stores, "list")} · ${atRisk(r.summary)} at risk`)),
+    h("span", { class: "chip" }, "In this browser"), icon("chev"))));
+  out.push(h("section", { class: "section" },
+    h("div", { class: "section-head" }, h("div", {}, h("h2", {}, "Scan activity"), h("p", {}, state.local ? "Scans of this computer, and reports opened here." : "Reports opened in this browser stay in this browser."))),
+    items.length ? h("div", { class: "card activity" }, items) : emptyCard("Nothing here yet.", "Scans and reports you open will be listed here.")));
+  return out;
 }
 
-function closeStore() {
-  const panel = $("panel");
-  if (!panel.classList.contains("open")) return;
-  panel.classList.remove("open");
-  panel.setAttribute("aria-hidden", "true");
-  const id = state.selected;
-  state.selected = null;
-  document.querySelectorAll(".row").forEach(r => r.setAttribute("aria-current", "false"));
-  document.querySelector(`.row[data-id="${id}"]`)?.focus();
+/* ---------- settings ---------- */
+
+function renderSettings() {
+  const s = state.status || {};
+  const sw = (key, label, text) => h("div", { class: "setrow" }, h("label", { for: `pref-${key}` }, h("b", {}, label), h("small", {}, text)),
+    h("span", { class: "switch" }, h("input", { type: "checkbox", id: `pref-${key}`, role: "switch", checked: !!state.prefs[key], onchange: (e) => { setPref(key, e.target.checked); toast(e.target.checked ? `${label} on` : `${label} off`); } }), h("span", {})));
+  const ev = primaryEvent();
+  const ref = refDate(s.reference?.mozilla_roots_as_of);
+  return [
+    h("div", { class: "head" }, h("div", {}, h("h1", { class: "display" }, "Make it feel like yours."), h("p", { class: "sub" }, "Keep the clarity. Choose how much motion comes with it."))),
+    h("div", { class: "settings" },
+      h("div", {},
+        h("section", { class: "card setgroup" }, h("h2", {}, "Experience"),
+          sw("calm", "Calm motion", "Layers settle instantly and pages only fade. Your system's reduced-motion setting is always respected."),
+          sw("flat", "Flat layers", "Show the trust stack as a simple list instead of the 3D object.")),
+        h("section", { class: "card setgroup" }, h("h2", {}, "Privacy and reference data"),
+          h("div", { class: "setrow" }, h("div", {}, h("b", {}, "Read-only"), h("small", {}, state.local ? "Scans read certificate lists and never change them. Results stay on this computer." :
+            "This site never scans the computer it runs on. Reports stay in your browser; checked files are deleted straight away.")), icon("lock")),
+          h("div", { class: "setrow" }, h("div", {}, h("b", {}, "Mozilla's trusted list"), h("small", {}, ref ? `As of ${ref}. Used to tell removed authorities from current ones.` : "Bundled with TrustWatch.")), h("span", { class: "chip" }, s.reference?.source ? "Bundled" : "")),
+          ev ? h("div", { class: "setrow" }, h("div", {}, h("b", {}, "Incident data"), h("small", {}, `${ev.title}. ${ev.compromised} affected certificates.`)), ev.sources?.[0] ? extLink(ev.sources[0], "Source") : null) : null,
+          h("div", { class: "setrow" }, h("div", {}, h("b", {}, "Reports opened in this browser"), h("small", {}, `${plural(savedReports().length, "report")} kept here, never uploaded.`)),
+            h("button", { class: "btn", type: "button", disabled: !savedReports().length, onclick: () => { try { localStorage.removeItem(STORE_KEY); } catch {} toast("Forgotten"); render(); } }, "Forget them")))),
+      h("section", { class: "card card-pad" },
+        h("img", { src: "/assets/owl-256.png", alt: "", style: "width:72px;height:72px" }),
+        h("h2", { style: "margin-top:12px" }, `TrustWatch ${s.version || ""}`),
+        h("p", { class: "lead" }, "Free and open source under the ", extLink("https://github.com/Naveen-Sai-Ganadi/trustwatch/blob/main/LICENSE", "MIT License"),
+          ". A non-profit project made for public, educational and personal use. Provided as is, without warranty of any kind."),
+        s.app?.update ? h("p", { class: "lead", style: "margin-top:12px" }, `Version ${s.app.update.version} is available. `, extLink(s.app.update.url, "Download")) : null,
+        h("p", { class: "lead", style: "margin-top:12px" }, extLink("https://github.com/Naveen-Sai-Ganadi/trustwatch", "Source code on GitHub"))))];
 }
 
-/* ---------- navigation ---------- */
+/* ---------- planned features: shown honestly, not simulated ---------- */
 
-function showReport(scan, source, push = true) {
-  closeStore();
-  state.scan = scan; state.source = source; state.filter = "all"; state.query = "";
-  renderReport();
-  syncHistory();
-  if (push && location.hash !== "#report") history.pushState(null, "", "#report");
-  window.scrollTo(0, 0);
-  $("main").focus({ preventScroll: true });
-  if (scan.stores.length === 1) openStore(scan.stores[0].id);  // one file checked: go straight to its details and fix
+function renderPlanned(key) {
+  const copy = key === "investigator"
+    ? { title: "Ask about your results.", sub: "An optional assistant that explains findings and suggests what to check next, using your own Claude or ChatGPT plan.",
+        items: ["It answers from the evidence in your scan, and says when it doesn't know.", "It asks before running any check, and you can say no.",
+          "Keys and connection strings stay on this computer and are never sent to the AI.", "Nothing is fixed without your yes for that exact action."] }
+    : { title: "Check your cloud and tools.", sub: "Read-only connections to cloud accounts and services, to find load balancers, gateways, functions and images that trust a compromised authority.",
+        items: ["Read-only access with the narrowest scope each provider offers.", "AWS, Google Cloud, Azure, Kubernetes and Cloudflare first, then more.",
+          "You see exactly what will be read before anything connects.", "Credentials stay in memory on this computer."] };
+  return [h("div", { class: "head" }, h("div", {}, h("div", { class: "eyebrow" }, "Planned · not built yet"), h("h1", { class: "display" }, copy.title), h("p", { class: "sub" }, copy.sub))),
+    h("section", { class: "card card-pad planned" }, h("h2", {}, "How it will work"), h("ul", {}, copy.items.map(i => h("li", {}, i))),
+      h("p", { class: "hint", style: "margin-top:16px" }, "This page shows no sample answers or fake connections. It will work once it's built and tested. Follow progress on ",
+        extLink("https://github.com/Naveen-Sai-Ganadi/trustwatch", "GitHub"), "."))];
 }
 
-function goHome(push = true) {
-  closeStore();
-  renderHome();
-  if (push && location.hash) history.pushState(null, "", location.pathname + location.search);
-  window.scrollTo(0, 0);
-}
-
-window.addEventListener("popstate", () => {
-  if (location.hash === "#report" && state.scan) showReport(state.scan, state.source, false);
-  else goHome(false);
-});
+/* ---------- local scans ---------- */
 
 function downloadReport() {
   const scan = state.scan;
@@ -951,39 +1548,21 @@ function downloadReport() {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function syncHistory() {
-  const sel = $("history");
-  const saved = savedReports();
-  const opts = [];
-  if (state.serverScans.length) opts.push(h("optgroup", { label: state.status?.host_scan === false ? "Earlier scans" : "Scans of this computer" }, state.serverScans.map(s =>
-    h("option", { value: `server:${s.id}` }, `${when(s.finished)}: ${s.summary.critical + s.summary.high} at risk of ${s.stores}`))));
-  if (saved.length) opts.push(h("optgroup", { label: "Opened in this browser" }, saved.map((r, i) =>
-    h("option", { value: `saved:${i}` }, `${r.label} (${(r.summary?.critical || 0) + (r.summary?.high || 0)} at risk)`))));
-  sel.replaceChildren(h("option", { value: "" }, "Choose a report"), ...opts);
-  const cur = state.source?.kind === "server" ? `server:${state.scan.id}` :
-    state.scan ? (() => { const i = saved.findIndex(r => r.id === state.scan.id); return i >= 0 ? `saved:${i}` : ""; })() : "";
-  sel.value = [...sel.options].some(o => o.value === cur) ? cur : "";
-  $("historyWrap").hidden = state.serverScans.length + saved.length < 1;
-}
-
-$("history").addEventListener("change", async (e) => {
-  const [kind, id] = e.target.value.split(":");
-  if (kind === "server") await openServerScan(id);
-  else if (kind === "saved") { const r = savedReports()[Number(id)]; if (r && validReport(r.data)) showReport(r.data, { kind: "file", label: r.label.replace(/^(Report|File): /, "") }); }
-});
-
 async function openServerScan(id) {
   try { showReport(await api(`/api/scans/${id}`), { kind: "server" }); }
   catch (e) { toast(e.message); }
 }
 
-/* ---------- local scans ---------- */
-
 function setBusy(on, phase) {
+  const was = state.busy;
+  state.busy = on ? (phase || "Scanning…") : null;
   $("progress").classList.toggle("on", on);
   if (phase) announce(phase);
-  document.querySelectorAll("#startBtn, #scanBtn").forEach(b => { b.disabled = on; });
-  if (state.local) $("scanBtn").textContent = on ? (phase || "Scanning…") : (state.serverScans.length ? "Scan again" : "Scan this computer");
+  document.querySelectorAll(".js-scan, #startBtn").forEach(b => { b.disabled = on; });
+  const ph = $("stagePhase");
+  if (on && ph) ph.textContent = state.busy;
+  if (!!was !== on && state.view === "overview") render();
+  else renderStatusbar();
 }
 
 async function startScan(targets) {
@@ -997,10 +1576,11 @@ async function follow(jobId) {
   setBusy(true, "Scanning…");
   for (;;) {
     const job = await api(`/api/jobs/${jobId}`);
-    if (job.state === "running") { setBusy(true, job.phase.length > 48 ? job.phase.slice(0, 46) + "…" : job.phase); await new Promise(r => setTimeout(r, 700)); continue; }
+    if (job.state === "running") { setBusy(true, job.phase.length > 56 ? job.phase.slice(0, 54) + "…" : job.phase); await new Promise(r => setTimeout(r, 700)); continue; }
     if (job.state === "failed") { setBusy(false); toast(`Scan failed: ${job.error}`); return; }
     state.serverScans = await api("/api/scans");
     setBusy(false);
+    state.opened = false;  // the new result opens the stack again
     await openServerScan(job.scan);
     toast("Scan finished");
     return;
@@ -1035,38 +1615,22 @@ $("startBtn").addEventListener("click", async () => {
     await follow(job.id);
   } catch (e) { $("dlgError").textContent = e.message; $("dlgError").hidden = false; }
 });
-$("scanBtn").addEventListener("click", () => state.source?.kind === "server" && state.scan ? startScan(state.scan.targets)
-  : state.status?.host_scan === false ? openDialog() : startScan({ host: true }));
-$("chooseBtn").addEventListener("click", openDialog);
-$("brand").addEventListener("click", () => goHome());
-document.addEventListener("keydown", (e) => { if (e.key === "Escape" && state.selected != null && !$("dialog").open) closeStore(); });
-
-function renderUpdate() {
-  const u = state.status?.app?.update, box = $("update");
-  if (!u || sessionStorageGet("trustwatch.update-dismissed") === u.version) { box.hidden = true; return; }
-  box.replaceChildren(h("div", {}, `TrustWatch ${u.version} is available.`, extLink(u.url, "Download"),
-    h("button", { class: "linkish", type: "button", onclick: () => { sessionStorageSet("trustwatch.update-dismissed", u.version); box.hidden = true; } }, "Not now")));
-  box.hidden = false;
-}
-function sessionStorageGet(k) { try { return sessionStorage.getItem(k); } catch { return null; } }
-function sessionStorageSet(k, v) { try { sessionStorage.setItem(k, v); } catch {} }
 
 (async function init() {
+  loadPrefs();
   $("main").replaceChildren(h("p", { class: "count" }, "Loading…"));
   try { state.status = await api("/api/status"); }
-  catch (e) { $("main").replaceChildren(h("section", { class: "empty" }, h("h1", {}, "TrustWatch can't reach its server."), h("p", {}, e.message))); return; }
+  catch (e) { $("main").replaceChildren(h("section", { class: "card card-pad" }, h("h1", {}, "TrustWatch can't reach its server."), h("p", { class: "lead" }, e.message))); return; }
   state.local = state.status.mode === "local";
-  if (state.local) {
-    $("scanBtn").hidden = false; $("chooseBtn").hidden = false;
-    state.serverScans = await api("/api/scans").catch(() => []);
-    if (state.serverScans.length) $("scanBtn").textContent = "Scan again";
-  }
-  renderFoot();
+  if (state.local) state.serverScans = await api("/api/scans").catch(() => []);
   renderUpdate();
   if (state.status.app) setTimeout(async () => { try { state.status.app = (await api("/api/status")).app; renderUpdate(); } catch {} }, 5000);
-  syncHistory();
-  if (state.local && state.serverScans.length && location.hash === "#report") await openServerScan(state.serverScans[0].id);
-  else { history.replaceState(null, "", location.pathname); renderHome(); }
+  const want = (location.hash || "#overview").slice(1).replace("report", "overview");
+  history.replaceState(null, "", location.pathname + (VIEWS[want] ? `#${want}` : ""));
+  if (state.local && state.serverScans.length) {
+    try { state.scan = await api(`/api/scans/${state.serverScans[0].id}`); state.source = { kind: "server" }; } catch { /* show the start page */ }
+  }
+  navigate(VIEWS[want] ? want : "overview", false);
   if (state.status.running) follow(state.status.running.id);
 })();
 </script>

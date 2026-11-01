@@ -139,7 +139,7 @@ def docker_images() -> list[str]:
     return sorted({l for l in r.stdout.split() if "<none>" not in l})
 
 
-ASSET_TYPES = {".woff2": "font/woff2", ".svg": "image/svg+xml", ".txt": "text/plain; charset=utf-8"}
+ASSET_TYPES = {".woff2": "font/woff2", ".svg": "image/svg+xml", ".png": "image/png", ".txt": "text/plain; charset=utf-8"}
 
 
 def make_handler(port: int, jobs: Jobs, public: bool = False, allowed_hosts: list[str] | None = None,
