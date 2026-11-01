@@ -72,10 +72,26 @@ def start_server(app_info: dict | None = None) -> tuple[ThreadingHTTPServer, str
     return httpd, f"http://127.0.0.1:{port}/?launch={token}"
 
 
-def self_test() -> int:
-    """Start the server, load the page and the API as the window would, then stop. Used by CI on the frozen app."""
+def hide_child_consoles() -> None:
+    """On Windows the app has no console, so every program the scan runs (docker, node, java --version) would open its
+    own console window for a moment. Start them all with CREATE_NO_WINDOW; their output is piped back anyway."""
+    if sys.platform != "win32":
+        return
+    original = subprocess.Popen.__init__
+
+    def init(self, *args, creationflags=0, **kwargs):
+        original(self, *args, creationflags=creationflags | 0x08000000, **kwargs)  # CREATE_NO_WINDOW
+    subprocess.Popen.__init__ = init
+
+
+def self_test(check_gui: bool = False) -> int:
+    """Start the server, load the page and the API as the window would, then stop. Used by CI on the frozen app,
+    with check_gui so the window code (Cocoa, or WinForms with WebView2) is proven to load without opening a window."""
     httpd, url = start_server({"version": __version__, "update": None})
     try:
+        if check_gui:
+            import webview  # noqa: F401
+            __import__("webview.platforms." + ("winforms" if sys.platform == "win32" else "cocoa"))
         with urllib.request.urlopen(url, timeout=30) as r:
             cookie = r.headers["Set-Cookie"].split(";")[0]
             page = r.read()
@@ -97,13 +113,14 @@ def self_test() -> int:
 def main(argv: list[str] | None = None) -> int:
     argv = sys.argv[1:] if argv is None else argv
     if "--self-test" in argv:
-        return self_test()
+        return self_test(check_gui=True)
     try:
         import webview
     except ImportError:
         print('The desktop window needs pywebview: pip install "trustwatch[desktop]"', file=sys.stderr)
         return 2
     os.environ["PATH"] = login_path()
+    hide_child_consoles()
     app_info = {"version": __version__, "update": None}
     httpd, url = start_server(app_info)
     threading.Thread(target=lambda: app_info.update(update=latest_release(__version__)), daemon=True).start()

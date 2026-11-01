@@ -1,16 +1,21 @@
 """The desktop app's runtime: PATH for apps opened from Finder, update check, local server, self-test."""
 import os
 import subprocess
+import sys
 from types import SimpleNamespace
 from urllib.parse import urlparse
 
-from trustwatch.desktop import latest_release, login_path, self_test, start_server
+import pytest
+
+from trustwatch.desktop import hide_child_consoles, latest_release, login_path, self_test, start_server
 
 
-def test_login_path_adds_shell_path_and_fallbacks(monkeypatch):
+@pytest.mark.parametrize("sep", [":", ";"])  # ";" is os.pathsep when this suite runs on Windows
+def test_login_path_adds_shell_path_and_fallbacks(monkeypatch, sep):
     monkeypatch.setattr("sys.platform", "darwin")
-    run = lambda *a, **k: SimpleNamespace(returncode=0, stdout="/opt/homebrew/bin:/usr/bin")
-    p = login_path(run=run, environ={"PATH": "/usr/bin:/bin", "SHELL": "/bin/zsh", "HOME": "/Users/x"}).split(os.pathsep)
+    monkeypatch.setattr(os, "pathsep", sep)
+    run = lambda *a, **k: SimpleNamespace(returncode=0, stdout=sep.join(["/opt/homebrew/bin", "/usr/bin"]))
+    p = login_path(run=run, environ={"PATH": sep.join(["/usr/bin", "/bin"]), "SHELL": "/bin/zsh", "HOME": "/Users/x"}).split(sep)
     assert p[:3] == ["/usr/bin", "/bin", "/opt/homebrew/bin"] and "/Users/x/.cargo/bin" in p and len(p) == len(set(p))
 
 
@@ -56,3 +61,18 @@ def test_app_command_explains_missing_pywebview(monkeypatch, capsys):
     from trustwatch import cli
     monkeypatch.setitem(sys.modules, "webview", None)  # makes `import webview` fail
     assert cli.main(["app"]) == 2 and "trustwatch[desktop]" in capsys.readouterr().err
+
+
+def test_self_test_fails_when_the_window_code_cannot_load(tmp_path, monkeypatch):
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
+    monkeypatch.setitem(sys.modules, "webview", None)
+    assert self_test(check_gui=True) == 1
+
+
+def test_child_programs_get_no_console_window_on_windows(monkeypatch):
+    seen = {}
+    monkeypatch.setattr(subprocess.Popen, "__init__", lambda self, *a, **k: seen.update(k))
+    monkeypatch.setattr("sys.platform", "win32")
+    hide_child_consoles()
+    subprocess.Popen(["docker", "images"], stdout=subprocess.PIPE)
+    assert seen["creationflags"] & 0x08000000 and seen["stdout"] == subprocess.PIPE
