@@ -264,6 +264,9 @@ dialog::backdrop { background: rgba(19, 26, 34, .45); }
 textarea { width: 100%; min-height: 64px; background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 10px; font-family: var(--mono); font-size: 13px; }
 .dlg-actions { display: flex; gap: 10px; justify-content: flex-end; padding: 14px 24px; border-top: 1px solid var(--rule-soft); }
 .error { color: var(--red); font-size: 14px; margin: 8px 0 0; }
+.update { background: var(--blue-wash); color: var(--ink); font-size: 14px; }
+.update > div { max-width: 1200px; margin: 0 auto; padding: 8px 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.update a { color: var(--blue); font-weight: 650; }
 .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 8px;
   font-size: 14px; z-index: 40; max-width: calc(100vw - 32px); box-shadow: 0 8px 24px -12px rgba(0,0,0,.5); }
 
@@ -316,6 +319,7 @@ textarea { width: 100%; min-height: 64px; background: var(--paper); border: 1px 
     <button class="btn" id="chooseBtn" type="button" hidden>Choose what to scan</button>
     <button class="btn primary" id="scanBtn" type="button" hidden>Scan this computer</button>
   </div>
+  <div class="update" id="update" role="status" hidden></div>
   <div class="progress" id="progress"></div>
   <div class="sr" id="live" role="status" aria-live="polite"></div>
 </header>
@@ -583,6 +587,7 @@ function renderWays() {
     ? h("div", { class: "way" },
         h("h3", {}, "Scan this computer"),
         h("p", {}, "TrustWatch is running on this computer, so it can check every certificate list here directly: the system, Python, Node, Java, desktop apps and command-line tools, plus any Docker images you choose."),
+        state.status?.app && /Mac/.test(navigator.platform) ? h("p", { class: "hint" }, "macOS may ask whether TrustWatch can read folders such as Documents or Downloads. Allow it to include certificate lists stored there, or skip it; the rest of the scan still runs.") : null,
         h("div", { class: "local-actions" },
           h("button", { class: "btn primary big", type: "button", onclick: () => startScan({ host: true }) }, state.serverScans.length ? "Scan again" : "Scan this computer"),
           h("button", { class: "btn big", type: "button", onclick: openDialog }, "Choose what to scan")),
@@ -1034,6 +1039,16 @@ $("chooseBtn").addEventListener("click", openDialog);
 $("brand").addEventListener("click", () => goHome());
 document.addEventListener("keydown", (e) => { if (e.key === "Escape" && state.selected != null && !$("dialog").open) closeStore(); });
 
+function renderUpdate() {
+  const u = state.status?.app?.update, box = $("update");
+  if (!u || sessionStorageGet("trustwatch.update-dismissed") === u.version) { box.hidden = true; return; }
+  box.replaceChildren(h("div", {}, `TrustWatch ${u.version} is available.`, extLink(u.url, "Download"),
+    h("button", { class: "linkish", type: "button", onclick: () => { sessionStorageSet("trustwatch.update-dismissed", u.version); box.hidden = true; } }, "Not now")));
+  box.hidden = false;
+}
+function sessionStorageGet(k) { try { return sessionStorage.getItem(k); } catch { return null; } }
+function sessionStorageSet(k, v) { try { sessionStorage.setItem(k, v); } catch {} }
+
 (async function init() {
   $("main").replaceChildren(h("p", { class: "count" }, "Loading…"));
   try { state.status = await api("/api/status"); }
@@ -1045,9 +1060,11 @@ document.addEventListener("keydown", (e) => { if (e.key === "Escape" && state.se
     if (state.serverScans.length) $("scanBtn").textContent = "Scan again";
   }
   renderFoot();
+  renderUpdate();
+  if (state.status.app) setTimeout(async () => { try { state.status.app = (await api("/api/status")).app; renderUpdate(); } catch {} }, 5000);
   syncHistory();
   if (state.local && state.serverScans.length && location.hash === "#report") await openServerScan(state.serverScans[0].id);
-  else { history.replaceState(null, "", location.pathname + location.search); renderHome(); }
+  else { history.replaceState(null, "", location.pathname); renderHome(); }
   if (state.status.running) follow(state.status.running.id);
 })();
 </script>

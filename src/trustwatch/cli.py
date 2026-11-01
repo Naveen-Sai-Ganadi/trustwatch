@@ -94,6 +94,8 @@ def main(argv: list[str] | None = None) -> int:
     sv.set_defaults(func=lambda a: __import__("trustwatch.server", fromlist=["serve"]).serve(
         a.port, not a.no_open, a.public, a.bind, a.allowed_host, a.wheel, a.trust_proxy, a.client_ip_header,
         not a.no_host, a.scan_dir))
+    sub.add_parser("app", help="open TrustWatch in its own window (needs pywebview)").set_defaults(
+        func=lambda a: __import__("trustwatch.desktop", fromlist=["main"]).main([]))
     sub.add_parser("update-feed", help="download the current Mozilla root store and CCADB reports").set_defaults(func=cmd_update)
     sub.add_parser("events", help="show the reference data and incident feeds in use").set_defaults(func=cmd_events)
     argv = sys.argv[1:] if argv is None else argv

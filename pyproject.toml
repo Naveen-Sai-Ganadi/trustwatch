@@ -1,6 +1,6 @@
 [project]
 name = "trustwatch"
-version = "0.2.0"
+version = "0.3.0"
 description = "Find trust stores that still trust distrusted or compromised certificate authorities, and say how to fix them."
 readme = "README.md"
 license = "MIT"
@@ -8,11 +8,15 @@ license-files = ["LICENSE"]
 requires-python = ">=3.11"
 dependencies = ["cryptography>=43"]
 
+[project.optional-dependencies]
+desktop = ["pywebview>=5"]
+
 [project.scripts]
 trustwatch = "trustwatch.cli:main"
 
 [dependency-groups]
 dev = ["pytest>=8"]
+build = ["pyinstaller>=6"]
 
 [build-system]
 requires = ["hatchling"]

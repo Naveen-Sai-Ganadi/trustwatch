@@ -48,3 +48,11 @@ def test_start_server_uses_a_free_port_and_self_test_passes(tmp_path, monkeypatc
     finally:
         httpd.shutdown()
     assert self_test() == 0
+
+
+def test_app_command_explains_missing_pywebview(monkeypatch, capsys):
+    import sys
+
+    from trustwatch import cli
+    monkeypatch.setitem(sys.modules, "webview", None)  # makes `import webview` fail
+    assert cli.main(["app"]) == 2 and "trustwatch[desktop]" in capsys.readouterr().err

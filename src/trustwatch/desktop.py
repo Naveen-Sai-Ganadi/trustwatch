@@ -92,3 +92,26 @@ def self_test() -> int:
         return 1
     finally:
         httpd.shutdown()
+
+
+def main(argv: list[str] | None = None) -> int:
+    argv = sys.argv[1:] if argv is None else argv
+    if "--self-test" in argv:
+        return self_test()
+    try:
+        import webview
+    except ImportError:
+        print('The desktop window needs pywebview: pip install "trustwatch[desktop]"', file=sys.stderr)
+        return 2
+    os.environ["PATH"] = login_path()
+    app_info = {"version": __version__, "update": None}
+    httpd, url = start_server(app_info)
+    threading.Thread(target=lambda: app_info.update(update=latest_release(__version__)), daemon=True).start()
+    webview.settings["ALLOW_DOWNLOADS"] = True  # "Download report" saves a file
+    webview.settings["OPEN_EXTERNAL_LINKS_IN_BROWSER"] = True
+    webview.create_window("TrustWatch", url, width=1240, height=860, min_size=(900, 600))
+    try:
+        webview.start()
+    finally:
+        httpd.shutdown()
+    return 0
