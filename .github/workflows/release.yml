@@ -1,0 +1,72 @@
+name: Release
+
+# Builds the desktop app on each OS (a Mac cannot build for Windows, so CI is the build machine).
+# A tag push (v0.3.0) also publishes a GitHub Release with the three files; a manual run only uploads artifacts.
+# Branch pushes that touch the app or its packaging build and self-test it too, so a broken Windows build shows up
+# before a release.
+on:
+  push:
+    tags: ["v*"]
+    branches: ["**"]
+    paths: ["packaging/**", "src/trustwatch/desktop.py", "pyproject.toml", "uv.lock", ".github/workflows/release.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    # macos-latest is Apple silicon (arm64), macos-15-intel is x86_64, windows-latest is x64.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-15-intel, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - name: Build and package
+        run: uv run --frozen --group build --extra desktop python packaging/build.py
+
+      # The frozen app loads its bundled data and UI, prints "ok <version>" and exits; no window opens.
+      - name: Self-test (macOS)
+        if: runner.os == 'macOS'
+        run: dist/TrustWatch.app/Contents/MacOS/TrustWatch --self-test
+      - name: Self-test (Windows)
+        if: runner.os == 'Windows'
+        # A windowed exe has no console, so run it with its output sent to files and check the exit code.
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath dist\TrustWatch\TrustWatch.exe -ArgumentList '--self-test' `
+            -RedirectStandardOutput selftest.out -RedirectStandardError selftest.err -NoNewWindow -Wait -PassThru
+          Get-Content selftest.out, selftest.err -ErrorAction SilentlyContinue
+          if ($p.ExitCode -ne 0) { throw "self-test exited with $($p.ExitCode)" }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: trustwatch-${{ matrix.os }}
+          path: |
+            dist/*.dmg
+            dist/*.zip
+          if-no-files-found: error
+
+  release:
+    # Tags only: create the Release and attach the .dmg files and the .zip.
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release
+          merge-multiple: true
+      - run: ls -l release
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release create "$GITHUB_REF_NAME" --generate-notes release/*

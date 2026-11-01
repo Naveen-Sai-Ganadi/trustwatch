@@ -8,6 +8,30 @@ inside `pip`, Node's compiled-in roots, Java `cacerts`, the bundle baked into yo
 until someone updates that specific copy. Vulnerability scanners key on CVEs, and CA distrust events usually have none.
 TrustWatch closes that gap.
 
+## Desktop app
+
+Download the latest release from <https://github.com/Naveen-Sai-Ganadi/trustwatch/releases/latest>:
+
+- `TrustWatch-<version>-mac-arm64.dmg` for Macs with Apple chips (M1 and later)
+- `TrustWatch-<version>-mac-x86_64.dmg` for Intel Macs
+- `TrustWatch-<version>-windows-x64.zip` for Windows 10 and 11
+
+The app is not signed yet, so the first open needs one extra step. The source is public in this repository, and the
+release files are built from it by GitHub Actions (`.github/workflows/release.yml`). The app only reads trust stores;
+it never changes anything.
+
+- **macOS:** open the `.dmg`, drag TrustWatch to Applications and double-click it. When macOS refuses, open System
+  Settings → Privacy & Security and click "Open Anyway". Or run
+  `xattr -dr com.apple.quarantine /Applications/TrustWatch.app` once.
+- **Windows:** unzip, open the `TrustWatch` folder and run `TrustWatch.exe`. When SmartScreen appears, click
+  "More info" → "Run anyway". The window uses WebView2, which is built into Windows 10 and 11.
+
+With Python and [uv](https://docs.astral.sh/uv/) installed, the same app runs from source:
+
+```sh
+uvx --from "trustwatch[desktop] @ git+https://github.com/Naveen-Sai-Ganadi/trustwatch" trustwatch app
+```
+
 ## What it checks
 
 | Check | Severity | How |
