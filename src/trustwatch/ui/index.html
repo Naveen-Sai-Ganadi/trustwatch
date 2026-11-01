@@ -650,7 +650,9 @@ function renderFoot() {
   $("foot").replaceChildren(
     h("p", {}, state.local ? "This dashboard runs on your computer and only answers to it. Scans read certificate lists and never change them."
       : "This site never scans the computer it runs on. Reports you open stay in your browser; files you check are deleted as soon as they are checked."),
-    h("p", {}, `TrustWatch ${s?.version || ""}. Compared against Mozilla's trusted list${ref ? ` as of ${ref}` : ""} and the published incident data.`));
+    h("p", {}, `TrustWatch ${s?.version || ""}. Compared against Mozilla's trusted list${ref ? ` as of ${ref}` : ""} and the published incident data.`),
+    h("p", {}, "Free and open source under the ", extLink("https://github.com/Naveen-Sai-Ganadi/trustwatch/blob/main/LICENSE", "MIT License"),
+      ", made for public, educational and personal use. Provided as is, without warranty of any kind."));
 }
 
 /* ---------- files: reports and certificate lists ---------- */

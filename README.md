@@ -248,4 +248,9 @@ each runner, and builds and smoke-tests the Docker images.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+TrustWatch is free and open source under the MIT License. See [LICENSE](LICENSE). It is a non-profit project made for
+public, educational and personal use. The MIT License itself lets anyone use, copy, change and share it, provided the
+copyright and licence notice stay with every copy. The desktop downloads include it as `LICENSE.txt`.
+
+TrustWatch is provided as is, without warranty of any kind. It reads trust stores and reports what it finds. It does
+not replace your own security review, and the authors are not liable for decisions made from its results.

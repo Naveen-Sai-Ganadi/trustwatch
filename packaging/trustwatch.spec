@@ -24,6 +24,8 @@ ENTRY = os.path.join(SPECPATH, "entry.py")  # noqa: F821 (SPECPATH is set by PyI
 
 # Bundled reference data (trustwatch/data/**) and the dashboard (trustwatch/ui/index.html).
 datas = collect_data_files("trustwatch")
+# The MIT notice travels inside the app (added here, before the bundle is signed, so the seal stays valid).
+datas.append((os.path.join(SPECPATH, "..", "LICENSE"), "."))  # noqa: F821
 
 # The CLI imports trustwatch.server lazily; take every module so nothing is missed.
 hiddenimports = collect_submodules("trustwatch")

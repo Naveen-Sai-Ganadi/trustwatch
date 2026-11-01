@@ -4,6 +4,7 @@
 
 macOS:   dist/TrustWatch.app and dist/TrustWatch-<version>-mac-<arm64|x86_64>.dmg
 Windows: dist/TrustWatch/ and dist/TrustWatch-<version>-windows-x64.zip (a TrustWatch folder inside)
+Both carry LICENSE.txt (MIT asks for the notice to travel with every copy).
 
 Prints the path of the .dmg or .zip. Exits non-zero on any failure.
 """
@@ -24,6 +25,7 @@ SPEC = ROOT / "packaging" / "trustwatch.spec"
 DIST = ROOT / "dist"
 WORK = ROOT / "build"
 VERSION = trustwatch.__version__
+LICENSE = ROOT / "LICENSE"
 
 
 def run(cmd: list[str]) -> None:
@@ -49,8 +51,14 @@ def package_mac() -> Path:
     app = DIST / "TrustWatch.app"
     if not app.is_dir():
         raise SystemExit(f"PyInstaller did not produce {app}")
+    # The disk image shows the app and the licence side by side.
+    stage = DIST / "dmg"
+    shutil.rmtree(stage, ignore_errors=True)
+    stage.mkdir()
+    shutil.copytree(app, stage / "TrustWatch.app", symlinks=True)
+    shutil.copyfile(LICENSE, stage / "LICENSE.txt")
     dmg = DIST / f"TrustWatch-{VERSION}-mac-{mac_arch()}.dmg"
-    cmd = ["hdiutil", "create", "-volname", "TrustWatch", "-srcfolder", str(app), "-ov", "-format", "UDZO", str(dmg)]
+    cmd = ["hdiutil", "create", "-volname", "TrustWatch", "-srcfolder", str(stage), "-ov", "-format", "UDZO", str(dmg)]
     # hdiutil sometimes fails with "Resource busy" on CI runners; a retry usually clears it.
     for attempt in range(1, 4):
         try:
@@ -68,6 +76,7 @@ def package_windows() -> Path:
     folder = DIST / "TrustWatch"
     if not (folder / "TrustWatch.exe").is_file():
         raise SystemExit(f"PyInstaller did not produce {folder / 'TrustWatch.exe'}")
+    shutil.copyfile(LICENSE, folder / "LICENSE.txt")
     base = DIST / f"TrustWatch-{VERSION}-windows-x64"
     return Path(shutil.make_archive(str(base), "zip", root_dir=DIST, base_dir="TrustWatch"))
 
