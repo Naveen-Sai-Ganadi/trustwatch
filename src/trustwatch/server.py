@@ -10,6 +10,7 @@ Two modes:
 """
 from __future__ import annotations
 
+import hmac
 import json
 import os
 import re
@@ -22,10 +23,11 @@ import webbrowser
 from collections import defaultdict, deque
 from dataclasses import asdict
 from datetime import datetime
+from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from importlib import resources
 from pathlib import Path
-from urllib.parse import unquote, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 from . import __version__
 from . import feed as feedmod
@@ -139,9 +141,11 @@ def docker_images() -> list[str]:
 
 def make_handler(port: int, jobs: Jobs, public: bool = False, allowed_hosts: list[str] | None = None,
                  wheel: Path | None = None, trust_proxy: int = 0, client_ip_header: str | None = None,
-                 host_scan: bool = True, scan_dir: str | None = None):
+                 host_scan: bool = True, scan_dir: str | None = None, launch_token: str | None = None):
     # host_scan=False is for the dashboard running in a container: "this computer" would be the container itself, so
     # only images and mounted folders (scan_dir) are offered.
+    # launch_token is set by the desktop app: the window opens /?launch=<token>, which sets a SameSite cookie, and
+    # nothing but /healthz answers without it, so other pages and local programs cannot drive the scanner.
     # Local mode only answers to its own address (DNS rebinding). Public mode accepts the configured site names, or any.
     allowed = set(allowed_hosts or []) if public else {f"127.0.0.1:{port}", f"localhost:{port}"}
     ui = resources.files("trustwatch").joinpath("ui", "index.html")
@@ -180,6 +184,12 @@ def make_handler(port: int, jobs: Jobs, public: bool = False, allowed_hosts: lis
         def _host_ok(self) -> bool:
             return (public and not allowed) or self.headers.get("Host") in allowed
 
+        def _token_ok(self) -> bool:
+            if not launch_token:
+                return True
+            jar = SimpleCookie(self.headers.get("Cookie", ""))
+            return "tw_launch" in jar and hmac.compare_digest(jar["tw_launch"].value, launch_token)
+
         def _client(self) -> str:
             # Rate limiting needs the visitor's address, not the proxy's. A visitor can send any X-Forwarded-For, and
             # each proxy appends the address it saw, so only the last `trust_proxy` entries are trustworthy.
@@ -198,10 +208,16 @@ def make_handler(port: int, jobs: Jobs, public: bool = False, allowed_hosts: lis
             if not self._host_ok():
                 return self._send(403, {"error": "Unexpected Host header."})
             path = self.path.split("?")[0]
-            if path == "/":
-                return self._send(200, ui.read_bytes(), "text/html; charset=utf-8")
             if path == "/healthz":
                 return self._send(200, {"ok": True})
+            if launch_token and not self._token_ok():
+                given = parse_qs(urlparse(self.path).query).get("launch", [""])[0]
+                if path != "/" or not hmac.compare_digest(given, launch_token):
+                    return self._send(403, {"error": "Open TrustWatch from the app."})
+                return self._send(200, ui.read_bytes(), "text/html; charset=utf-8",
+                                  {"Set-Cookie": f"tw_launch={launch_token}; HttpOnly; SameSite=Strict; Path=/"})
+            if path == "/":
+                return self._send(200, ui.read_bytes(), "text/html; charset=utf-8")
             if path == "/api/status":
                 status = {"version": __version__, "mode": "public" if public else "local", "browser_test": tests,
                           "reference": {"mozilla_roots_as_of": feed.reference_date, "source": feed.source},
@@ -231,7 +247,7 @@ def make_handler(port: int, jobs: Jobs, public: bool = False, allowed_hosts: lis
 
         def do_POST(self):
             # The custom header cannot be sent cross-origin without a CORS preflight, which this server never approves.
-            if not self._host_ok() or self.headers.get("X-TrustWatch") != "1":
+            if not self._host_ok() or self.headers.get("X-TrustWatch") != "1" or not self._token_ok():
                 return self._send(403, {"error": "Request refused."})
             try:
                 length = int(self.headers.get("Content-Length", 0))

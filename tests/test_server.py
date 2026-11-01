@@ -191,3 +191,38 @@ def test_container_dashboard_never_scans_itself(tmp_path, monkeypatch):
         assert code == 400 and "at least one" in body["error"]
     finally:
         httpd.shutdown()
+
+
+def _get(url, headers=None):
+    req = urllib.request.Request(url, headers=headers or {})
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return r.status, r.headers
+    except urllib.error.HTTPError as e:
+        return e.code, e.headers
+
+
+def test_launch_token_guards_the_api(tmp_path, monkeypatch):
+    monkeypatch.setattr(server, "DATA", tmp_path / "scans")
+    httpd = ThreadingHTTPServer(("127.0.0.1", 0), None)
+    port = httpd.server_address[1]
+    httpd.RequestHandlerClass = server.make_handler(port, server.Jobs(), launch_token="s3cret")
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    url = f"http://127.0.0.1:{port}"
+    try:
+        assert _get(url + "/api/status")[0] == 403
+        assert _get(url + "/")[0] == 403
+        assert _get(url + "/?launch=wrong")[0] == 403
+        code, headers = _get(url + "/?launch=s3cret")
+        cookie = headers["Set-Cookie"]
+        assert code == 200 and "tw_launch=s3cret" in cookie and "SameSite=Strict" in cookie and "HttpOnly" in cookie
+        assert call(url + "/api/status", headers={"Cookie": "tw_launch=s3cret"})[0] == 200
+        assert _get(url + "/", {"Cookie": "tw_launch=s3cret"})[0] == 200  # reloads keep working
+        assert call(url + "/api/scan", {"host": True}, {"X-TrustWatch": "1"})[0] == 403  # no cookie
+        assert _get(url + "/healthz")[0] == 200
+    finally:
+        httpd.shutdown()
+
+
+def test_without_token_nothing_changes(dash):
+    assert call(dash + "/api/status")[0] == 200

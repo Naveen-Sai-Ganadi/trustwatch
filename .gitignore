@@ -8,3 +8,4 @@ dist/
 .claude/
 /reports/
 .DS_Store
+/.superpowers/
