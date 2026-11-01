@@ -9,3 +9,4 @@ dist/
 /reports/
 .DS_Store
 /.superpowers/
+/build/
