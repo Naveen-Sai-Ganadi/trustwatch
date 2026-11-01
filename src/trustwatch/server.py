@@ -139,6 +139,9 @@ def docker_images() -> list[str]:
     return sorted({l for l in r.stdout.split() if "<none>" not in l})
 
 
+ASSET_TYPES = {".woff2": "font/woff2", ".svg": "image/svg+xml", ".txt": "text/plain; charset=utf-8"}
+
+
 def make_handler(port: int, jobs: Jobs, public: bool = False, allowed_hosts: list[str] | None = None,
                  wheel: Path | None = None, trust_proxy: int = 0, client_ip_header: str | None = None,
                  host_scan: bool = True, scan_dir: str | None = None, launch_token: str | None = None,
@@ -150,6 +153,9 @@ def make_handler(port: int, jobs: Jobs, public: bool = False, allowed_hosts: lis
     # Local mode only answers to its own address (DNS rebinding). Public mode accepts the configured site names, or any.
     allowed = set(allowed_hosts or []) if public else {f"127.0.0.1:{port}", f"localhost:{port}"}
     ui = resources.files("trustwatch").joinpath("ui", "index.html")
+    # Fonts and images the page uses: only these exact names, so nothing else in the package can be read.
+    assets_dir = resources.files("trustwatch").joinpath("ui", "assets")
+    assets = {p.name: p for p in assets_dir.iterdir() if ASSET_TYPES.get(Path(p.name).suffix)}
     feed = feedmod.load()
     tests = browser_test(feed)
     test_origins = sorted({f"https://{h}" for t in tests for h in t["hosts"]} |
@@ -172,7 +178,7 @@ def make_handler(port: int, jobs: Jobs, public: bool = False, allowed_hosts: lis
             self.send_response(code)
             self.send_header("Content-Type", ctype)
             self.send_header("Content-Length", str(len(data)))
-            self.send_header("Cache-Control", "no-store")
+            self.send_header("Cache-Control", (extra or {}).pop("Cache-Control", "no-store"))
             self.send_header("X-Content-Type-Options", "nosniff")
             self.send_header("Referrer-Policy", "no-referrer")
             self.send_header("Content-Security-Policy", csp)
@@ -219,6 +225,12 @@ def make_handler(port: int, jobs: Jobs, public: bool = False, allowed_hosts: lis
                                   {"Set-Cookie": f"tw_launch={launch_token}; HttpOnly; SameSite=Strict; Path=/"})
             if path == "/":
                 return self._send(200, ui.read_bytes(), "text/html; charset=utf-8")
+            if path.startswith("/assets/"):
+                asset = assets.get(path.removeprefix("/assets/"))
+                if not asset:
+                    return self._send(404, {"error": "Not found."})
+                return self._send(200, asset.read_bytes(), ASSET_TYPES[Path(asset.name).suffix],
+                                  {"Cache-Control": "max-age=86400"})
             if path == "/api/status":
                 status = {"version": __version__, "mode": "public" if public else "local", "browser_test": tests,
                           "reference": {"mozilla_roots_as_of": feed.reference_date, "source": feed.source},
