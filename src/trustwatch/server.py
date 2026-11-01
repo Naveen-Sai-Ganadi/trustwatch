@@ -141,7 +141,8 @@ def docker_images() -> list[str]:
 
 def make_handler(port: int, jobs: Jobs, public: bool = False, allowed_hosts: list[str] | None = None,
                  wheel: Path | None = None, trust_proxy: int = 0, client_ip_header: str | None = None,
-                 host_scan: bool = True, scan_dir: str | None = None, launch_token: str | None = None):
+                 host_scan: bool = True, scan_dir: str | None = None, launch_token: str | None = None,
+                 app_info: dict | None = None):
     # host_scan=False is for the dashboard running in a container: "this computer" would be the container itself, so
     # only images and mounted folders (scan_dir) are offered.
     # launch_token is set by the desktop app: the window opens /?launch=<token>, which sets a SameSite cookie, and
@@ -228,6 +229,8 @@ def make_handler(port: int, jobs: Jobs, public: bool = False, allowed_hosts: lis
                 if not public:
                     status |= {"docker": bool(shutil.which("docker")), "images": docker_images(), "running": jobs.running(),
                                "host_scan": host_scan, "scan_dir": scan_dir}
+                if app_info is not None:  # desktop app: version and update, filled in by a background check
+                    status["app"] = app_info
                 return self._send(200, status)
             if wheel and path == f"/download/{wheel.name}":
                 return self._send(200, wheel.read_bytes(), "application/octet-stream",
