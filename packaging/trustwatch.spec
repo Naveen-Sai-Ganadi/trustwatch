@@ -77,6 +77,7 @@ exe = EXE(  # noqa: F821
     [],
     exclude_binaries=True,  # onedir: libraries go next to the executable
     name="TrustWatch",
+    icon=os.path.join(SPECPATH, "icons", "trustwatch.ico"),  # noqa: F821 (Windows; macOS uses the bundle's .icns)
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -102,7 +103,7 @@ if IS_MAC:
     app = BUNDLE(  # noqa: F821
         coll,
         name="TrustWatch.app",
-        icon=None,
+        icon=os.path.join(SPECPATH, "icons", "trustwatch.icns"),  # noqa: F821
         bundle_identifier="io.github.naveen-sai-ganadi.trustwatch",
         version=trustwatch.__version__,
         info_plist={
