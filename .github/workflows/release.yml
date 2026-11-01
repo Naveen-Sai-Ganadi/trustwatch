@@ -14,6 +14,11 @@ on:
 permissions:
   contents: read
 
+# uv's own Python carries OpenSSL inside it. A system Python brings its own libssl.3.dylib, which on Intel Macs (where
+# cryptography is compiled against Homebrew's OpenSSL) collides with the newer one in the bundle.
+env:
+  UV_PYTHON_PREFERENCE: only-managed
+
 jobs:
   build:
     # macos-latest is Apple silicon (arm64), macos-15-intel is x86_64, windows-latest is x64.
