@@ -31,7 +31,7 @@
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
-body { margin: 0; font: 400 14.5px/1.55 "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink);
+body { margin: 0; font: 400 13.5px/1.5 "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink);
   background: linear-gradient(180deg, #FAFBFE 0, var(--porcelain) 360px); -webkit-font-smoothing: antialiased; font-feature-settings: "tnum" 0; }
 h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.02em; color: var(--ink); }
 p { margin: 0; }
@@ -100,22 +100,22 @@ main { flex: 1; padding: 34px 32px 48px; outline: none; }
 .statusbar a { color: var(--ink-2); }
 
 /* ---------- type and common pieces ---------- */
-.head { display: flex; gap: 24px; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; margin-bottom: 28px; }
+.head { display: flex; gap: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 20px; }
 .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); margin-bottom: 12px; }
 .eyebrow::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--cobalt); }
-.display { font-size: clamp(34px, 4.2vw, 50px); line-height: 1.04; letter-spacing: -0.04em; font-weight: 600; }
-.sub { margin-top: 12px; font-size: 16px; color: var(--ink-2); max-width: 62ch; }
-.meta { margin-top: 10px; font-size: 13px; color: var(--ink-3); }
+.display { font-size: 24px; line-height: 1.2; letter-spacing: -0.025em; font-weight: 600; }
+.sub { margin-top: 4px; font-size: 13.5px; color: var(--ink-2); max-width: 62ch; }
+.meta { margin-top: 4px; font-size: 12.5px; color: var(--ink-3); }
 .head-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 10px 16px; border-radius: 12px; border: 1px solid var(--line);
-  background: var(--white); color: var(--ink); font-weight: 600; font-size: 14px; cursor: pointer; text-decoration: none; box-shadow: 0 1px 2px rgba(32, 52, 83, .05);
+  background: var(--white); color: var(--ink); font-weight: 600; font-size: 13px; cursor: pointer; text-decoration: none; box-shadow: 0 1px 2px rgba(32, 52, 83, .05);
   transition: transform .16s var(--spring), background .16s, border-color .16s, box-shadow .16s; }
 .btn:hover { border-color: var(--line-strong); background: #FBFCFF; }
 .btn:active { transform: scale(.98); }
 .btn[disabled] { opacity: .55; cursor: progress; }
 .btn.primary { background: linear-gradient(180deg, #4470F0, var(--cobalt)); border-color: var(--cobalt-deep); color: #fff; box-shadow: 0 6px 18px rgba(54, 95, 229, .32), inset 0 1px 0 rgba(255, 255, 255, .25); }
 .btn.primary:hover { background: linear-gradient(180deg, #4D78F2, #3A63E8); }
-.btn.big { padding: 13px 20px; font-size: 15px; }
+.btn.big { padding: 10px 16px; font-size: 13.5px; }
 .btn.ghost { background: transparent; box-shadow: none; }
 .linkish { background: none; border: 0; padding: 0; color: var(--cobalt); font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
 .linkish:hover { text-decoration: underline; text-underline-offset: 3px; }
@@ -129,13 +129,13 @@ main { flex: 1; padding: 34px 32px 48px; outline: none; }
 .s-critical, .s-high { background: var(--coral); } .s-medium, .s-low { background: #C9993F; } .s-info, .s-ok { background: #4FA58C; } .s-partial { background: #A9B6CF; }
 .card { background: var(--white); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow-1); }
 .card-pad { padding: 24px 26px; }
-.card h2 { font-size: 19px; }
-.card .lead { margin-top: 6px; color: var(--ink-2); font-size: 13.5px; }
+.card h2 { font-size: 16px; }
+.card .lead { margin-top: 4px; color: var(--ink-2); font-size: 12.5px; }
 .hint { color: var(--ink-3); font-size: 13px; }
 .section { margin-top: 40px; }
-.section > h2 { font-size: 21px; }
+.section > h2 { font-size: 17px; }
 .section-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
-.section-head p { margin-top: 4px; color: var(--ink-2); font-size: 14px; }
+.section-head p { margin-top: 2px; color: var(--ink-2); font-size: 12.5px; }
 .cmd { display: flex; align-items: center; gap: 12px; margin: 10px 0; padding: 12px 14px; border-radius: 12px; background: #F0F4FC; border: 1px solid var(--line);
   font-family: var(--mono); font-size: 12.8px; color: var(--ink); overflow-x: auto; }
 .cmd span { flex: 1; white-space: pre; }
@@ -231,8 +231,8 @@ main { flex: 1; padding: 34px 32px 48px; outline: none; }
 .attention .mark { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; }
 .attention.risk .mark { background: var(--coral-wash); color: var(--coral); } .attention.review .mark { background: var(--amber-wash); color: var(--amber); }
 .attention.clear .mark { background: var(--sea-wash); color: var(--sea); } .attention.empty .mark { background: var(--cobalt-wash); color: var(--cobalt); }
-.attention h2 { margin-top: 18px; font-size: 23px; line-height: 1.18; letter-spacing: -0.025em; }
-.attention p { margin-top: 12px; color: var(--ink-2); font-size: 13.8px; }
+.attention h2 { margin-top: 14px; font-size: 18px; line-height: 1.18; letter-spacing: -0.025em; }
+.attention p { margin-top: 8px; color: var(--ink-2); font-size: 12.5px; }
 .attention .go { margin-top: 18px; width: 100%; justify-content: space-between; color: var(--cobalt-deep); }
 .attention .foot { margin-top: 14px; font-size: 12px; color: var(--ink-3); }
 .attention .actions { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
@@ -245,9 +245,9 @@ main { flex: 1; padding: 34px 32px 48px; outline: none; }
 .cleg button:hover { background: var(--porcelain); }
 .cleg b { margin-left: auto; font-weight: 600; color: var(--ink); }
 .coverage .note { margin-top: 10px; font-size: 12px; color: var(--ink-3); }
-.diff { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 12px; font-size: 13px; color: var(--ink-2); }
+.diff { display: inline; font-size: 12.5px; color: var(--ink-3); }
 .diff b.good { color: var(--sea); } .diff b.bad { color: var(--coral); }
-.layer-card h2 { font-size: 20px; margin-top: 14px; }
+.layer-card h2 { font-size: 17px; margin-top: 12px; }
 .layer-card .mini { margin-top: 16px; display: flex; flex-direction: column; gap: 2px; }
 .layer-card .mini button { display: flex; gap: 10px; align-items: center; padding: 8px 8px; margin: 0 -8px; border: 0; border-radius: 10px; background: none; text-align: left; cursor: pointer; font-size: 13px; }
 .layer-card .mini button:hover { background: var(--porcelain); }
@@ -262,7 +262,7 @@ main { flex: 1; padding: 34px 32px 48px; outline: none; }
 .row:hover { background: #FAFBFF; }
 .row:hover .chev { transform: translateX(3px); color: var(--cobalt); }
 .row .tile { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; background: var(--porcelain); border: 1px solid var(--line); color: var(--ink-2); }
-.row .name { font-weight: 600; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .name { font-weight: 600; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .row .name small { font-weight: 500; color: var(--ink-3); margin-left: 6px; font-size: 12.5px; }
 .row .loc { display: block; font-size: 12px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }
 .row .what { font-size: 13px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -300,16 +300,16 @@ dialog[open]::backdrop { animation: fade .28s var(--ease-std); }
 .iconbtn { width: 36px; height: 36px; border-radius: 10px; border: 1px solid transparent; background: none; cursor: pointer; display: grid; place-items: center; color: var(--ink-2); }
 .iconbtn:hover { background: var(--porcelain); border-color: var(--line); }
 .sheet-body { padding: 22px 26px 26px; overflow-y: auto; }
-.sheet-body h3.title { font-size: 26px; letter-spacing: -0.03em; margin-top: 12px; }
-.sheet-body h3.title small { font-size: 15px; font-weight: 500; color: var(--ink-3); margin-left: 8px; letter-spacing: 0; }
+.sheet-body h3.title { font-size: 21px; letter-spacing: -0.03em; margin-top: 12px; }
+.sheet-body h3.title small { font-size: 13px; font-weight: 500; color: var(--ink-3); margin-left: 8px; letter-spacing: 0; }
 .sheet-body .plainline { margin-top: 8px; color: var(--ink-2); }
 .pathbox { display: flex; gap: 10px; align-items: center; margin-top: 18px; padding: 12px 14px; border-radius: 12px; background: #F0F4FC; border: 1px solid var(--line); font-family: var(--mono); font-size: 12.5px; overflow-x: auto; }
 .pathbox span { white-space: nowrap; }
 .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-top: 18px; padding: 16px 0; border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); }
 .facts dt { font-size: 12px; color: var(--ink-3); } .facts dd { margin: 3px 0 0; font-weight: 600; font-size: 13.5px; }
 .finding { margin-top: 24px; }
-.finding > h4 { display: flex; gap: 10px; align-items: center; font-size: 16px; flex-wrap: wrap; }
-.finding > p { margin-top: 10px; color: var(--ink-2); font-size: 13.8px; }
+.finding > h4 { display: flex; gap: 10px; align-items: center; font-size: 14.5px; flex-wrap: wrap; }
+.finding > p { margin-top: 8px; color: var(--ink-2); font-size: 12.8px; }
 .finding ul { margin: 10px 0 0; padding-left: 18px; color: var(--ink-2); font-size: 13px; }
 .chain-title { margin-top: 18px; font-size: 14px; font-weight: 600; }
 .route { margin-top: 12px; }
@@ -335,7 +335,7 @@ dialog[open]::backdrop { animation: fade .28s var(--ease-std); }
 
 /* scan dialog */
 .dlg { padding: 24px 26px 8px; overflow-y: auto; }
-.dlg h2 { font-size: 22px; letter-spacing: -0.02em; }
+.dlg h2 { font-size: 18px; letter-spacing: -0.02em; }
 .dlg > p { margin-top: 6px; color: var(--ink-2); font-size: 13.5px; }
 .field { margin-top: 18px; }
 .field .title { display: block; font-weight: 600; font-size: 14px; margin-bottom: 8px; }
@@ -967,7 +967,7 @@ function headline(scan) {
   if (!total) return { title: `No certificate lists found ${where}.`, sub: "Add folders, images or programs and scan again." };
   if (es && es.hit.length) {
     return { title: `${es.hit.length} of ${total} certificate lists ${where} still trust the leaked ${name} certificates.`,
-             sub: "Your browser can be up to date while these lists still accept them. Each has its own fix; start with the ones marked Critical." };
+             sub: "Each has its own fix. Start with Critical." };
   }
   const issues = scan.stores.filter(s => ["critical", "high", "medium"].includes(s.verdict)).length;
   return { title: issues ? `Nothing ${where} trusts the leaked ${name} certificates, but ${plural(issues, "list needs", "lists need")} attention.`
@@ -989,26 +989,21 @@ function scanButtons(big) {
 function renderOverview() {
   const scan = state.scan, ev = primaryEvent();
   const src = state.source;
-  const eyebrow = !scan ? (ev ? `${eventName(ev)} incident · October 2026` : "Certificate trust check")
-    : src?.kind === "file" ? `Report from ${src.label}` : src?.kind === "upload" ? `Check of ${src.label}` : scan.targets?.host ? "Your local trust picture" : "Images and folders";
-  const metaBits = scan ? [`Checked ${when(scan.finished)}`, plural(scan.stores.length, "certificate list"),
-    refDate(scan.reference?.mozilla_roots_as_of) ? `Mozilla's list as of ${refDate(scan.reference.mozilla_roots_as_of)}` : null].filter(Boolean) : [];
+  const eyebrow = !scan ? ""
+    : src?.kind === "file" ? `Report from ${src.label}` : src?.kind === "upload" ? `Check of ${src.label}` : scan.targets?.host ? "This computer" : "Images and folders";
+  const metaBits = scan ? [plural(scan.stores.length, "list")] : [];
   const head = h("div", { class: "head" },
     h("div", {},
-      h("div", { class: "eyebrow" }, eyebrow),
-      h("h1", { class: "display" }, "Trust, made visible."),
-      h("p", { class: "sub" }, scan ? "Know what's trusted. Understand what needs your attention."
-        : "Find every certificate list that still trusts the leaked eMudhra certificates, and how to fix each one."),
-      scan ? h("p", { class: "meta" }, metaBits.join(" · ")) : null,
-      scan?.diff ? diffLine(scan.diff) : null),
+      h("h1", { class: "display" }, "Overview"),
+      scan ? h("p", { class: "meta" }, [eyebrow, ...metaBits].join(" · "), scan.diff ? " · " : "", scan.diff ? diffLine(scan.diff) : null)
+        : h("p", { class: "meta" }, "Find certificate lists that still trust the leaked eMudhra certificates.")),
     h("div", { class: "head-actions" }, ...scanButtons(true),
       scan ? h("button", { class: "btn big", type: "button", onclick: downloadReport }, icon("download"), "Download report")
         : !state.local ? h("button", { class: "btn primary big", type: "button", onclick: () => $("probeBtn")?.scrollIntoView({ behavior: calm() ? "auto" : "smooth", block: "center" }) }, icon("globe"), "Test this browser") : null));
 
   const stageCard = h("section", { class: "card stage-card", "aria-labelledby": "stackTitle" },
     h("div", { class: "card-top" },
-      h("div", {}, h("h2", { id: "stackTitle" }, "Inside your trust stack"),
-        h("p", { class: "lead" }, "One computer, many independent lists of trust. Each layer is updated separately.")),
+      h("div", {}, h("h2", { id: "stackTitle" }, "Your trust stack")),
       h("span", { class: "chip" }, state.prefs.flat ? "Flat view" : "Interactive 3D")),
     renderStack(), state.prefs.flat ? null : layerChips(), state.prefs.flat ? null : scrubber());
 
@@ -1020,11 +1015,9 @@ function renderOverview() {
 }
 
 function diffLine(d) {
-  return h("div", { class: "diff" },
-    h("span", {}, `Since the scan ${when(d.previous_finished)}:`),
-    h("span", {}, h("b", { class: "good" }, d.fixed.length), " fixed", d.fixed.length ? ` (${d.fixed.slice(0, 3).join(", ")}${d.fixed.length > 3 ? ", …" : ""})` : ""),
-    h("span", {}, h("b", { class: d.new.length ? "bad" : "" }, d.new.length), d.new.length === 1 ? " new problem" : " new problems",
-      d.new.length ? ` (${d.new.slice(0, 3).join(", ")}${d.new.length > 3 ? ", …" : ""})` : ""));
+  return h("span", { class: "diff", title: `Compared with the scan ${when(d.previous_finished)}` },
+    h("b", { class: d.fixed.length ? "good" : "" }, d.fixed.length), " fixed, ",
+    h("b", { class: d.new.length ? "bad" : "" }, d.new.length), " new since last scan");
 }
 
 function asideTop() {
@@ -1110,7 +1103,7 @@ function priorities(scan) {
   const worst = scan.stores.filter(s => ["critical", "high", "medium"].includes(s.verdict)).slice(0, 5);
   return h("section", { class: "section", "aria-labelledby": "prioTitle" },
     h("div", { class: "section-head" },
-      h("div", {}, h("h2", { id: "prioTitle" }, "Start with what matters"), h("p", {}, "Clear evidence. A specific next step.")),
+      h("div", {}, h("h2", { id: "prioTitle" }, "Start with what matters")),
       h("button", { class: "linkish", type: "button", onclick: () => { state.filter = "all"; state.layerFilter = null; navigate("findings"); } }, `All ${plural(scan.stores.length, "list")}`, icon("arrow"))),
     h("div", { class: "card list-card" }, worst.length ? h("div", { class: "rows" }, worst.map(storeRow))
       : h("div", { class: "allclear" }, h("span", { class: "mark" }, icon("check")),
@@ -1120,7 +1113,7 @@ function priorities(scan) {
 function moreChecks() {
   return h("section", { class: "section", "aria-labelledby": "moreTitle" },
     h("div", { class: "section-head" }, h("div", {}, h("h2", { id: "moreTitle" }, state.scan ? "More checks" : "Check the rest of your software"),
-      h("p", {}, "Apps, programming languages, servers and containers don't use your browser's protection. Each keeps its own list."))),
+      null)),
     renderProbe(),
     h("div", { class: "two", style: "margin-top:22px" }, state.local ? null : runSteps(), fileCard()));
 }
@@ -1318,9 +1311,8 @@ function visibleStores(scan) {
 function renderFindings() {
   const scan = state.scan;
   const head = h("div", { class: "head" }, h("div", {},
-    h("div", { class: "eyebrow" }, scan ? `${plural(scan.stores.length, "certificate list")} · ${when(scan.finished)}` : "Findings"),
-    h("h1", { class: "display" }, "Every list, with its fix."),
-    h("p", { class: "sub" }, "Select a list to see the evidence: where it is, which compromised chains it accepts, and the exact command that fixes it.")),
+    h("h1", { class: "display" }, "Findings"),
+    scan ? h("p", { class: "meta" }, `${plural(scan.stores.length, "list")} · select one for its evidence and fix`) : null),
     h("div", { class: "head-actions" }, scan ? h("button", { class: "btn", type: "button", onclick: downloadReport }, icon("download"), "Download report") : null));
   if (!scan) return [head, emptyCard("No scan to show yet.", state.local ? "Scan this computer, or open a report someone sent you." : "Open a TrustWatch report to see its findings.")];
   const sum = scan.summary;
@@ -1466,8 +1458,7 @@ $("evidence").addEventListener("click", (e) => { if (e.target === $("evidence"))
 function renderHistory() {
   const scan = state.scan, d = scan?.diff;
   const head = h("div", { class: "head" }, h("div", {},
-    h("h1", { class: "display" }, "Progress you can verify."),
-    h("p", { class: "sub" }, "Compare scans of the same things. A smaller count only means progress when the scope matches.")),
+    h("h1", { class: "display" }, "History")),
     h("div", { class: "head-actions" }, scan ? h("button", { class: "btn", type: "button", onclick: downloadReport }, icon("download"), "Download report") : null));
   const out = [head];
   if (scan) {
@@ -1503,7 +1494,7 @@ function renderSettings() {
   const ev = primaryEvent();
   const ref = refDate(s.reference?.mozilla_roots_as_of);
   return [
-    h("div", { class: "head" }, h("div", {}, h("h1", { class: "display" }, "Make it feel like yours."), h("p", { class: "sub" }, "Keep the clarity. Choose how much motion comes with it."))),
+    h("div", { class: "head" }, h("div", {}, h("h1", { class: "display" }, "Settings"))),
     h("div", { class: "settings" },
       h("div", {},
         h("section", { class: "card setgroup" }, h("h2", {}, "Experience"),
@@ -1529,13 +1520,13 @@ function renderSettings() {
 
 function renderPlanned(key) {
   const copy = key === "investigator"
-    ? { title: "Ask about your results.", sub: "An optional assistant that explains findings and suggests what to check next, using your own Claude or ChatGPT plan.",
+    ? { name: "Investigator", title: "Ask about your results.", sub: "An optional assistant that explains findings and suggests what to check next, using your own Claude or ChatGPT plan.",
         items: ["It answers from the evidence in your scan, and says when it doesn't know.", "It asks before running any check, and you can say no.",
           "Keys and connection strings stay on this computer and are never sent to the AI.", "Nothing is fixed without your yes for that exact action."] }
-    : { title: "Check your cloud and tools.", sub: "Read-only connections to cloud accounts and services, to find load balancers, gateways, functions and images that trust a compromised authority.",
+    : { name: "Connections", title: "Check your cloud and tools.", sub: "Read-only connections to cloud accounts and services, to find load balancers, gateways, functions and images that trust a compromised authority.",
         items: ["Read-only access with the narrowest scope each provider offers.", "AWS, Google Cloud, Azure, Kubernetes and Cloudflare first, then more.",
           "You see exactly what will be read before anything connects.", "Credentials stay in memory on this computer."] };
-  return [h("div", { class: "head" }, h("div", {}, h("div", { class: "eyebrow" }, "Planned · not built yet"), h("h1", { class: "display" }, copy.title), h("p", { class: "sub" }, copy.sub))),
+  return [h("div", { class: "head" }, h("div", {}, h("h1", { class: "display" }, copy.name, " ", h("span", { class: "chip" }, "Planned")), h("p", { class: "sub" }, copy.sub))),
     h("section", { class: "card card-pad planned" }, h("h2", {}, "How it will work"), h("ul", {}, copy.items.map(i => h("li", {}, i))),
       h("p", { class: "hint", style: "margin-top:16px" }, "This page shows no sample answers or fake connections. It will work once it's built and tested. Follow progress on ",
         extLink("https://github.com/Naveen-Sai-Ganadi/trustwatch", "GitHub"), "."))];
