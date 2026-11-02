@@ -387,14 +387,14 @@ dialog[open]::backdrop { animation: fade .28s var(--ease-std); }
 .os-tabs { display: inline-flex; gap: 0; padding: 2px; border-radius: 6px; background: var(--white); border: 1px solid var(--line); margin-top: 6px; }
 .os-tabs button { border: 0; background: none; height: 24px; padding: 0 9px; border-radius: 4px; font-size: 12.5px; font-weight: 500; color: var(--ink-2); cursor: pointer; }
 .os-tabs button[aria-selected="true"] { background: var(--selected); color: var(--ink); }
-.timeline { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 16px; border-left: 2px solid var(--line); }
+.timeline { list-style: none; margin: 4px 0 0 5px; padding: 0; display: grid; gap: 16px; border-left: 2px solid var(--line); }
 .timeline li { position: relative; padding-left: 18px; }
 .timeline li::before { content: ""; position: absolute; left: -6px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: #fff; border: 2px solid var(--cobalt); }
 .timeline li.now::before { background: var(--coral); border-color: var(--coral); }
-.timeline time { font-size: 12.5px; font-weight: 700; color: var(--ink-3); }
-.timeline p { margin-top: 2px; font-size: 13.5px; color: var(--ink-2); }
-.whos { margin: 14px 0 0; display: grid; gap: 14px; }
-.whos dt { font-weight: 600; font-size: 14px; } .whos dd { margin: 3px 0 0; color: var(--ink-2); font-size: 13.5px; }
+.timeline time { font-size: 12px; font-weight: 600; color: var(--ink-3); }
+.timeline p { margin-top: 2px; font-size: 12.5px; color: var(--ink-2); }
+.whos { margin: 0; }
+.whos dt { font-weight: 600; font-size: 13px; margin-top: 12px; } .whos dt:first-child { margin-top: 0; } .whos dd { margin: 2px 0 0; color: var(--ink-2); font-size: 12.5px; }
 
 /* ---------- history, settings, planned ---------- */
 .compare { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -426,7 +426,7 @@ dialog[open]::backdrop { animation: fade .28s var(--ease-std); }
 .switch input:checked + span::after { transform: translateX(14px); }
 .switch input:focus-visible + span { outline: 2px solid var(--cobalt); outline-offset: 2px; }
 .planned { max-width: none; }
-.planned ul { margin: 14px 0 0; padding-left: 18px; color: var(--ink-2); display: grid; gap: 6px; font-size: 13px; }
+.planned ul { margin: 0; padding-left: 18px; color: var(--ink-2); display: grid; gap: 6px; font-size: 13px; }
 
 /* ---------- calm motion ---------- */
 html.calm *, html.calm *::before, html.calm *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; transition-delay: 0s !important; }
@@ -1097,10 +1097,11 @@ function layersTable(scan) {
 
 function incidentCard(ev) {
   if (!ev) return h("span");
-  return h("section", { class: "card card-pad" },
-    h("h3", { style: "font-size:15px" }, "What happened"),
-    h("p", { class: "lead" }, `The private keys of eMudhra intermediate certificates were exposed. With cross-signed copies, ${ev.compromised} certificates are affected. Browsers blocked them from 17 October 2026; software with its own list still trusts them.`),
-    ev.sources?.[0] ? h("p", { style: "margin-top:12px;font-size:13px" }, extLink(ev.sources[0], "Read the incident report")) : null);
+  return h("section", { class: "card" },
+    h("div", { class: "card-top" }, h("h2", {}, "What happened")),
+    h("div", { class: "card-body" },
+    h("p", { class: "lead", style: "margin-top:0" }, `The private keys of eMudhra intermediate certificates were exposed. With cross-signed copies, ${ev.compromised} certificates are affected. Browsers blocked them from 17 October 2026; software with its own list still trusts them.`),
+    ev.sources?.[0] ? h("p", { style: "margin-top:10px;font-size:12.5px" }, extLink(ev.sources[0], "Read the incident report")) : null));
 }
 
 function thead() {
@@ -1290,8 +1291,9 @@ async function openFile(file) {
 
 function renderStory(ev) {
   return h("section", { class: "section two", "aria-label": "About the incident" },
-    h("div", { class: "card card-pad" },
-      h("h2", {}, "What happened"),
+    h("div", { class: "card" },
+      h("div", { class: "card-top" }, h("h2", {}, "What happened")),
+      h("div", { class: "card-body" },
       h("ol", { class: "timeline" },
         h("li", {}, h("time", {}, "October 2026"), h("p", {}, `Researchers showed that the private keys of eight eMudhra intermediate certificates can be worked out from the certificates themselves. Copies cross-signed by Sectigo bring the total to ${ev.compromised} affected certificates.`)),
         h("li", {}, h("time", {}, "17 to 20 October 2026"), h("p", {}, "Chrome, Firefox, Safari and Edge block the certificates, so up-to-date browsers are safe.")),
@@ -1299,13 +1301,14 @@ function renderStory(ev) {
       h("details", { class: "plain" }, h("summary", {}, "What is a certificate authority?"),
         h("p", { class: "lead" }, "A certificate authority (CA) is a company that browsers and operating systems trust to vouch for websites. When you visit a site, it shows a certificate signed by a CA; if your software trusts that CA, you see the padlock."),
         h("p", { class: "lead" }, `The affected roots are ${ev.affected_roots.join(", ")}. Once they are removed from a trusted list, nothing that list protects can be fooled by the leaked keys.`),
-        h("p", { class: "lead" }, "Read more: ", ev.sources.map((u, i) => [i ? ", " : "", extLink(u)])))),
-    h("div", { class: "card card-pad" },
-      h("h2", {}, "Who needs to do something"),
+        h("p", { class: "lead" }, "Read more: ", ev.sources.map((u, i) => [i ? ", " : "", extLink(u)]))))),
+    h("div", { class: "card" },
+      h("div", { class: "card-top" }, h("h2", {}, "Who needs to do something")),
+      h("div", { class: "card-body" },
       h("dl", { class: "whos" },
         h("dt", {}, "Everyone"), h("dd", {}, "Update your browser, your operating system and your desktop apps as updates arrive, then test this browser above."),
         h("dt", {}, "Developers"), h("dd", {}, "Scan your laptop. Python, pip, Node.js, Java and tools like uv and Bun each carry their own list, and many still accept the certificates."),
-        h("dt", {}, "IT, platform and security teams"), h("dd", {}, "Scan servers and every container image you ship. Add TrustWatch to your build so an image that still trusts a compromised authority fails before it is released."))));
+        h("dt", {}, "IT, platform and security teams"), h("dd", {}, "Scan servers and every container image you ship. Add TrustWatch to your build so an image that still trusts a compromised authority fails before it is released.")))));
 }
 
 /* ---------- findings ---------- */
@@ -1526,13 +1529,14 @@ function renderSettings() {
           ev ? h("div", { class: "setrow" }, h("div", {}, h("b", {}, "Incident data"), h("small", {}, `${ev.title}. ${ev.compromised} affected certificates.`)), ev.sources?.[0] ? extLink(ev.sources[0], "Source") : null) : null,
           h("div", { class: "setrow" }, h("div", {}, h("b", {}, "Reports opened in this browser"), h("small", {}, `${plural(savedReports().length, "report")} kept here, never uploaded.`)),
             h("button", { class: "btn", type: "button", disabled: !savedReports().length, onclick: () => { try { localStorage.removeItem(STORE_KEY); } catch {} toast("Forgotten"); render(); } }, "Forget them")))),
-      h("section", { class: "card card-pad" },
-        h("img", { src: "/assets/owl-256.png", alt: "", style: "width:36px;height:36px" }),
-        h("h2", { style: "margin-top:12px" }, `TrustWatch ${s.version || ""}`),
-        h("p", { class: "lead" }, "Free and open source under the ", extLink("https://github.com/Naveen-Sai-Ganadi/trustwatch/blob/main/LICENSE", "MIT License"),
+      h("section", { class: "card" },
+        h("div", { class: "card-top" }, h("h2", { style: "display:flex;align-items:center;gap:8px" }, h("img", { src: "/assets/owl-64.png", alt: "", style: "width:18px;height:18px" }), "About"),
+          h("span", { class: "chip" }, `v${s.version || ""}`)),
+        h("div", { class: "card-body" },
+        h("p", { class: "lead", style: "margin-top:0" }, "TrustWatch is free and open source under the ", extLink("https://github.com/Naveen-Sai-Ganadi/trustwatch/blob/main/LICENSE", "MIT License"),
           ". A non-profit project made for public, educational and personal use. Provided as is, without warranty of any kind."),
         s.app?.update ? h("p", { class: "lead", style: "margin-top:12px" }, `Version ${s.app.update.version} is available. `, extLink(s.app.update.url, "Download")) : null,
-        h("p", { class: "lead", style: "margin-top:12px" }, extLink("https://github.com/Naveen-Sai-Ganadi/trustwatch", "Source code on GitHub"))))];
+        h("p", { class: "lead", style: "margin-top:10px" }, extLink("https://github.com/Naveen-Sai-Ganadi/trustwatch", "Source code on GitHub")))))];
 }
 
 /* ---------- planned features: shown honestly, not simulated ---------- */
@@ -1546,9 +1550,9 @@ function renderPlanned(key) {
         items: ["Read-only access with the narrowest scope each provider offers.", "AWS, Google Cloud, Azure, Kubernetes and Cloudflare first, then more.",
           "You see exactly what will be read before anything connects.", "Credentials stay in memory on this computer."] };
   return [h("div", { class: "head" }, h("div", {}, h("h1", { class: "display" }, copy.name, " ", h("span", { class: "chip" }, "Planned")), h("p", { class: "sub" }, copy.sub))),
-    h("section", { class: "card card-pad planned" }, h("h2", {}, "How it will work"), h("ul", {}, copy.items.map(i => h("li", {}, i))),
+    h("section", { class: "card planned" }, h("div", { class: "card-top" }, h("h2", {}, "How it will work")), h("div", { class: "card-body" }, h("ul", {}, copy.items.map(i => h("li", {}, i))),
       h("p", { class: "hint", style: "margin-top:16px" }, "This page shows no sample answers or fake connections. It will work once it's built and tested. Follow progress on ",
-        extLink("https://github.com/Naveen-Sai-Ganadi/trustwatch", "GitHub"), "."))];
+        extLink("https://github.com/Naveen-Sai-Ganadi/trustwatch", "GitHub"), ".")))];
 }
 
 /* ---------- local scans ---------- */
