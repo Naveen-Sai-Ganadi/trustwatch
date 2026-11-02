@@ -144,16 +144,17 @@ main { flex: 1; padding: 20px 24px 32px; outline: none; }
 @keyframes toast { from { opacity: 0; transform: translate(-50%, 14px) scale(.96); } }
 
 /* ---------- overview ---------- */
-.ov { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 14px; align-items: start; }
-.stage-card { padding: 0; overflow: hidden; }
+.ov { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 14px; align-items: stretch; }
+.stage-card { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+.stage-card .flat-stack { flex: 1; }
 .card-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; height: 44px; padding: 0 16px; border-bottom: 1px solid var(--line); }
-.stage { position: relative; height: 320px; overflow: hidden; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none;
+.stage { position: relative; flex: 1; min-height: 320px; overflow: hidden; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none;
   background: var(--porcelain); }
 .stage.dragging { cursor: grabbing; }
 .scene { position: absolute; inset: 0; }
 /* No nested 3D (preserve-3d), which some engines flatten (the desktop app runs on WebKit): every piece carries the
    same tilt itself and is lifted on screen by its height, sin(rx) per pixel; later plates paint over earlier ones. */
-.rig { position: absolute; left: 50%; top: 72%; width: 0; height: 0; --gap: 34px; transform: scale(var(--s, 1));
+.rig { position: absolute; left: 50%; top: calc(50% + 80px); width: 0; height: 0; --gap: 34px; transform: scale(var(--s, 1));
   --tilt: perspective(1700px) rotateX(var(--rx)) rotateZ(var(--rz)); }
 .dragging .plate, .dragging .floor, .dragging .shade { transition: none; }
 .floor { position: absolute; width: 1100px; height: 1100px; left: -550px; top: -550px; pointer-events: none;
@@ -215,7 +216,8 @@ main { flex: 1; padding: 20px 24px 32px; outline: none; }
 .scrub input[type=range] { flex: 1; accent-color: var(--cobalt); height: 20px; }
 .scrub .btn { height: 26px; padding: 0 8px; font-size: 12px; }
 .aside-stack { display: flex; flex-direction: column; gap: 14px; }
-.attention { position: relative; padding: 16px; overflow: hidden; }
+.attention { position: relative; overflow: hidden; }
+.card-body { padding: 12px 16px 14px; }
 .attention::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .3s;
   background: radial-gradient(240px circle at var(--gx, 50%) var(--gy, 0%), rgba(255, 255, 255, .85), transparent 60%); }
 .attention::after { display: none; }
@@ -223,9 +225,9 @@ main { flex: 1; padding: 20px 24px 32px; outline: none; }
 .attention .mark { display: none; }
 .attention.risk .mark { background: var(--coral-wash); color: var(--coral); } .attention.review .mark { background: var(--amber-wash); color: var(--amber); }
 .attention.clear .mark { background: var(--sea-wash); color: var(--sea); } .attention.empty .mark { background: var(--cobalt-wash); color: var(--cobalt); }
-.attention h2 { margin-top: 10px; font-size: 14px; line-height: 1.35; }
-.attention p { margin-top: 8px; color: var(--ink-2); font-size: 12.5px; }
-.attention .go { margin-top: 12px; width: 100%; justify-content: space-between; }
+.attention .att-title { font-size: 13.5px; font-weight: 600; line-height: 1.4; color: var(--ink); }
+.attention p { margin-top: 6px; color: var(--ink-2); font-size: 12.5px; }
+.attention .go { margin-top: 10px; width: 100%; justify-content: space-between; }
 .attention .foot { margin-top: 10px; font-size: 12px; color: var(--ink-3); }
 .attention .actions { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
 .kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin-bottom: 14px; background: var(--white); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
@@ -248,11 +250,11 @@ button.lt-row:hover { background: var(--hover); }
 .lt-head + .lt-row { border-top: 0; }
 .diff { display: inline; font-size: 12.5px; color: var(--ink-3); }
 .diff b.good { color: var(--sea); } .diff b.bad { color: var(--coral); }
-.layer-card h2 { font-size: 14px; margin-top: 10px; }
-.layer-card .mini { margin-top: 12px; display: flex; flex-direction: column; gap: 2px; }
+.layer-card .lead { margin-top: 0; }
+.layer-card .mini { margin-top: 8px; display: flex; flex-direction: column; gap: 2px; }
 .layer-card .mini button { display: flex; gap: 10px; align-items: center; padding: 6px 8px; margin: 0 -8px; border: 0; border-radius: 6px; background: none; text-align: left; cursor: pointer; font-size: 12.5px; }
 .layer-card .mini button:hover { background: var(--hover); }
-.layer-card .mini span:nth-child(2) { flex: 1; min-width: 0; line-height: 1.35; overflow-wrap: anywhere; }
+.layer-card .mini span:nth-child(2) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* rows: priority list and findings */
 .rows { display: flex; flex-direction: column; }
@@ -903,6 +905,8 @@ function mountStage() {
     requestAnimationFrame(() => requestAnimationFrame(() => setExplode(false)));
   } else { state.opened = true; stage.classList.add("scrubbing"); setExplode(true); requestAnimationFrame(() => stage.classList.remove("scrubbing")); }
   if (state.busy) rig.classList.add("scanning");
+  // The stage stretches with the cards beside it, so the labels follow every size change, not only window resizes.
+  if (window.ResizeObserver) new ResizeObserver(() => followLabels()).observe(stage);
   let start = null;
   stage.addEventListener("pointerdown", (e) => {
     if (e.button !== 0 || e.target.closest("button")) return;
@@ -1021,8 +1025,9 @@ function asideTop() {
   if (!scan) {
     const container = state.status?.host_scan === false;
     return h("section", { class: "card attention empty", id: "asideTop" },
-      h("div", { class: "badge-row" }, h("span", { class: "mark" }, icon("layers")), h("span", { class: "chip" }, state.local ? "Ready" : "Read-only")),
-      h("h2", {}, state.local ? (container ? "Scan images and folders." : "See what this computer trusts.") : "Check a computer or server."),
+      h("div", { class: "card-top" }, h("h2", {}, "Get started"), h("span", { class: "chip" }, state.local ? "Ready" : "Read-only")),
+      h("div", { class: "card-body" },
+      h("p", { class: "att-title" }, state.local ? (container ? "Scan images and folders." : "See what this computer trusts.") : "Check a computer or server."),
       h("p", {}, state.local
         ? (container ? ["TrustWatch is running in Docker, so it checks the images on this computer and the folders mounted into it",
             state.status.scan_dir ? [" (", h("code", {}, state.status.scan_dir), ")"] : "", "."]
@@ -1033,31 +1038,32 @@ function asideTop() {
         : [h("button", { class: "btn primary", type: "button", onclick: () => $("fileInput").click() }, icon("file"), "Open a report"),
            h("button", { class: "btn", type: "button", onclick: () => $("runSteps")?.scrollIntoView({ behavior: calm() ? "auto" : "smooth" }) }, "How to run a scan")]),
       state.serverScans.length ? h("p", { class: "foot" }, `Last scan ${when(state.serverScans[0].finished)}. `,
-        h("button", { class: "linkish", type: "button", onclick: () => openServerScan(state.serverScans[0].id) }, "Open it")) : null);
+        h("button", { class: "linkish", type: "button", onclick: () => openServerScan(state.serverScans[0].id) }, "Open it")) : null));
   }
   const hd = headline(scan), tone = overallTone(scan);
   const top = scan.stores.find(s => TONE[s.verdict] === "risk") || scan.stores.find(s => TONE[s.verdict] === "review");
   const es = eventStats(scan);
   return h("section", { class: `card attention ${tone}`, id: "asideTop" },
-    h("div", { class: "badge-row" }, h("span", { class: "mark" }, icon(tone === "clear" ? "check" : "alert")),
+    h("div", { class: "card-top" }, h("h2", {}, "Status"),
       h("span", { class: `tag ${tone === "risk" ? "t-critical" : tone === "review" ? "t-medium" : "t-ok"}` }, tone === "risk" ? "Needs attention" : tone === "review" ? "Worth reviewing" : "No known findings")),
-    h("h2", {}, hd.title), h("p", {}, hd.sub),
-    top ? h("button", { class: "btn go", type: "button", onclick: () => openStore(top.id) }, "Show me why", icon("arrow")) : null,
-    h("p", { class: "foot" }, es?.ev ? [`${eventName(es.ev)} incident · `, es.ev.sources?.[0] ? extLink(es.ev.sources[0], "what happened") : "published data"] : "Compared against Mozilla's list"));
+    h("div", { class: "card-body" },
+      h("p", { class: "att-title" }, hd.title), h("p", {}, hd.sub),
+      top ? h("button", { class: "btn go", type: "button", onclick: () => openStore(top.id) }, "Show me why", icon("arrow")) : null,
+      h("p", { class: "foot" }, es?.ev ? [`${eventName(es.ev)} incident · `, es.ev.sources?.[0] ? extLink(es.ev.sources[0], "what happened") : "published data"] : "Compared against Mozilla's list")));
 }
 
 function layerCard(L) {
   const shown = L.stores.slice(0, 6);
-  return h("section", { class: "card card-pad layer-card", id: "asideTop" },
-    h("div", { class: "badge-row", style: "display:flex;justify-content:space-between;align-items:center" },
-      h("span", { class: "chip" }, h("span", { class: `dot ${L.tone}` }), layerStatus(L)),
+  return h("section", { class: "card layer-card", id: "asideTop" },
+    h("div", { class: "card-top" }, h("h2", {}, h("span", { class: `dot ${L.tone}`, style: "margin-right:8px" }), L.name),
       h("button", { class: "iconbtn", type: "button", "aria-label": "Close layer", onclick: () => selectLayer(null) }, icon("close"))),
-    h("h2", {}, L.name), h("p", { class: "lead" }, L.blurb),
-    shown.length ? h("div", { class: "mini" }, shown.map(s => h("button", { type: "button", onclick: () => openStore(s.id) },
-      h("span", { class: `dot s-${s.verdict}` }), h("span", {}, s.name, s.version ? ` ${s.version}` : ""), h("span", { class: `tag t-${s.verdict}` }, LABEL[s.verdict]))))
+    h("div", { class: "card-body" },
+    h("p", { class: "lead" }, layerStatus(L), " · ", L.blurb),
+    shown.length ? h("div", { class: "mini" }, shown.map(s => h("button", { type: "button", onclick: () => openStore(s.id), title: `${s.name}${s.version ? " " + s.version : ""}` },
+      h("span", { class: `dot s-${s.verdict}` }), h("span", {}, s.name), h("span", { class: `tag t-${s.verdict}` }, LABEL[s.verdict]))))
       : h("p", { class: "hint", style: "margin-top:14px" }, state.scan ? "This scan found no certificate list in this layer." : "Run a scan to see what this layer holds."),
     L.stores.length ? h("button", { class: "linkish", type: "button", style: "margin-top:14px", onclick: () => { state.layerFilter = L.key; state.filter = "all"; navigate("findings"); } },
-      `See all ${L.stores.length} in Findings`, icon("arrow")) : null);
+      `See all ${L.stores.length} in Findings`, icon("arrow")) : null));
 }
 
 function kpis(scan) {
